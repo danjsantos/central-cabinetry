@@ -15,7 +15,7 @@
 <nav class="navbar">
     <div class="nav-inner">
         <a href="index.html" class="logo">Central Home Good</a>
-        <div class="nav-links" id="navLinks"><a href="about-us.html" class="active">About Us</a><a href="door-styles.html">Cabinets</a><a href="flooring.html">Flooring</a><a href="outdoor.html">Outdoor Living</a><a href="contact.html">Contact Us</a><a href="book-appointment.html">Book Appointment</a></div>
+        <div class="nav-links" id="navLinks"><a href="door-styles.html">Cabinets</a><a href="flooring.html">Flooring</a><a href="outdoor.html">Outdoor Living</a><a href="about-us.html" class="active">About Us</a><a href="contact.html">Contact Us</a><a href="book-appointment.html">Book Appointment</a></div>
         <a href="tel:(843) 712-1001" class="nav-phone">(843) 712-1001</a>
         <button class="nav-toggle" onclick="toggleMenu()">&#9776;</button>
     </div>
@@ -36,12 +36,12 @@
     <div class="container">
         <div class="about-grid">
             <div>
-                <h2>Who We Are</h2>
-                <p>Central Home Good is a premier cabinet supplier serving Myrtle Beach and the surrounding area. We specialize in Ready-to-Assemble (RTA) kitchen and bathroom cabinets at wholesale prices.</p>
-                <p>Our goal is simple: deliver premium quality cabinets that transform your home, at prices that make sense for your budget.</p>
+                <h2 id="about-title">Who We Are</h2>
+                <p id="about-body-1">Central Home Good is a premier cabinet supplier serving Myrtle Beach and the surrounding area. We specialize in Ready-to-Assemble (RTA) kitchen and bathroom cabinets at wholesale prices.</p>
+                <p id="about-body-2">Our goal is simple: deliver premium quality cabinets that transform your home, at prices that make sense for your budget.</p>
                 <br>
                 <h3>Our Differentials</h3>
-                <ul class="diff-list">
+                <ul class="diff-list" id="about-differentials">
                     <li>&#9989; Solid wood construction</li>
                     <li>&#9989; Soft-close hinges and drawer slides</li>
                     <li>&#9989; Ships within 3 business days</li>
@@ -52,10 +52,10 @@
             </div>
             <div class="about-contact-card">
                 <h3>Visit Our Showroom</h3>
-                <p>&#128205; 1297 US-501, Myrtle Beach, SC 29577</p>
-                <p>&#128222; (843) 712-1001</p>
-                <p>&#9993; sales@centralhomegood.com</p>
-                <p>&#128336; Monday to Saturday, 9:00am to 5:00pm</p>
+                <p id="about-address">&#128205; 1297 US-501, Myrtle Beach, SC 29577</p>
+                <p id="about-phone">&#128222; (843) 712-1001</p>
+                <p id="about-email">&#9993; sales@centralhomegood.com</p>
+                <p id="about-hours">&#128336; Monday to Saturday, 9:00am to 5:00pm</p>
                 <br>
                 <a href="contact.html" class="btn-primary">Contact Us</a>
             </div>
@@ -95,9 +95,38 @@
         </div>
     </div>
     <div class="footer-bottom">
-        <p>&copy; 2026 Central Home Good. All rights reserved.</p>
+        <p>&copy; 2026 Central Home Good. All rights reserved. &nbsp;|&nbsp; <a href="admin.html" style="color:inherit;opacity:.55;text-decoration:none;">Admin</a></p>
     </div>
 </footer>
 <script src="js/main.js"></script>
+<script>
+(async function loadAboutContent() {
+    const SUPABASE_URL = 'https://apxelbabvviuwqpfivtr.supabase.co';
+    const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFweGVsYmFidnZpdXdxcGZpdnRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NjEyOTYsImV4cCI6MjA5OTIzNzI5Nn0.EWt2FRAkJH86Is9P_uDjKDXnJ0O1J2qdg_BuctQavvY';
+    try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/about_content?id=eq.1&select=*`, {
+            headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` }
+        });
+        const rows = await res.json();
+        const c = rows && rows[0];
+        if (!c) return;
+
+        if (c.intro_title) document.getElementById('about-title').textContent = c.intro_title;
+        if (c.intro_body_1) document.getElementById('about-body-1').textContent = c.intro_body_1;
+        if (c.intro_body_2) document.getElementById('about-body-2').textContent = c.intro_body_2;
+        if (Array.isArray(c.differentials) && c.differentials.length) {
+            document.getElementById('about-differentials').innerHTML =
+                c.differentials.map(d => `<li>&#9989; ${d}</li>`).join('');
+        }
+        if (c.showroom_address) document.getElementById('about-address').innerHTML = '&#128205; ' + c.showroom_address;
+        if (c.showroom_phone) document.getElementById('about-phone').innerHTML = '&#128222; ' + c.showroom_phone;
+        if (c.showroom_email) document.getElementById('about-email').innerHTML = '&#9993; ' + c.showroom_email;
+        if (c.showroom_hours) document.getElementById('about-hours').innerHTML = '&#128336; ' + c.showroom_hours;
+    } catch (err) {
+        // If the fetch fails, the static fallback text already in the page stays visible
+        console.error('Could not load About Us content:', err);
+    }
+})();
+</script>
 </body>
 </html>

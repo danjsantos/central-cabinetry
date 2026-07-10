@@ -50,6 +50,14 @@
         .admin-title { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
         .admin-sub { color: #888; font-size: 13px; margin-bottom: 24px; }
 
+        .admin-tabs { display: flex; gap: 8px; margin-bottom: 24px; border-bottom: 1px solid #eee; }
+        .tab-btn {
+            background: none; border: none; padding: 10px 4px; margin-right: 16px;
+            font-size: 14px; font-weight: 600; color: #888; cursor: pointer;
+            border-bottom: 2px solid transparent;
+        }
+        .tab-btn.active { color: #2A6496; border-bottom-color: #2A6496; }
+
         #loading-styles { text-align: center; padding: 60px; color: #888; }
 
         /* GRID */
@@ -182,10 +190,59 @@
         <button class="btn-logout" onclick="doLogout()">Sign Out</button>
     </div>
     <div class="admin-body">
-        <div class="admin-title">Door Styles</div>
-        <div class="admin-sub">Click Edit to update any door style. Changes appear on the website immediately.</div>
-        <div id="loading-styles">Loading...</div>
-        <div id="styles-grid" class="styles-grid" style="display:none"></div>
+        <div class="admin-tabs">
+            <button class="tab-btn active" onclick="switchTab('styles')" id="tab-btn-styles">Door Styles</button>
+            <button class="tab-btn" onclick="switchTab('about')" id="tab-btn-about">About Us Page</button>
+        </div>
+
+        <div id="tab-styles">
+            <div class="admin-title">Door Styles</div>
+            <div class="admin-sub">Click Edit to update any door style. Changes appear on the website immediately.</div>
+            <div id="loading-styles">Loading...</div>
+            <div id="styles-grid" class="styles-grid" style="display:none"></div>
+        </div>
+
+        <div id="tab-about" style="display:none">
+            <div class="admin-title">About Us Page</div>
+            <div class="admin-sub">Update the text shown on the About Us page. Changes appear on the website immediately after saving.</div>
+            <div id="loading-about">Loading...</div>
+            <div id="about-form" style="display:none; max-width:640px;">
+                <div class="field">
+                    <label>Section Title</label>
+                    <input type="text" id="about-edit-title">
+                </div>
+                <div class="field">
+                    <label>Paragraph 1</label>
+                    <textarea id="about-edit-body1" style="height:90px"></textarea>
+                </div>
+                <div class="field">
+                    <label>Paragraph 2</label>
+                    <textarea id="about-edit-body2" style="height:70px"></textarea>
+                </div>
+                <div class="field">
+                    <label>Differentials (one per line)</label>
+                    <textarea id="about-edit-differentials" style="height:120px"></textarea>
+                </div>
+                <div class="field">
+                    <label>Showroom Address</label>
+                    <input type="text" id="about-edit-address">
+                </div>
+                <div class="field">
+                    <label>Showroom Phone</label>
+                    <input type="text" id="about-edit-phone">
+                </div>
+                <div class="field">
+                    <label>Showroom Email</label>
+                    <input type="text" id="about-edit-email">
+                </div>
+                <div class="field">
+                    <label>Showroom Hours</label>
+                    <input type="text" id="about-edit-hours">
+                </div>
+                <button class="btn-save" style="max-width:220px" id="btn-save-about" onclick="saveAboutContent()">Save Changes</button>
+                <div id="about-save-msg" class="save-msg"></div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -392,6 +449,77 @@ async function saveStyle() {
 document.getElementById('modal').addEventListener('click', function(e) {
     if (e.target === this) closeModal();
 });
+
+let aboutLoaded = false;
+
+function switchTab(tab) {
+    document.getElementById('tab-styles').style.display = tab === 'styles' ? 'block' : 'none';
+    document.getElementById('tab-about').style.display = tab === 'about' ? 'block' : 'none';
+    document.getElementById('tab-btn-styles').classList.toggle('active', tab === 'styles');
+    document.getElementById('tab-btn-about').classList.toggle('active', tab === 'about');
+    if (tab === 'about' && !aboutLoaded) loadAboutContent();
+}
+
+async function loadAboutContent() {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/about_content?id=eq.1&select=*`, {
+        headers: headers(true)
+    });
+    const rows = await res.json();
+    const c = rows && rows[0];
+
+    document.getElementById('loading-about').style.display = 'none';
+    document.getElementById('about-form').style.display = 'block';
+
+    if (!c) return;
+    document.getElementById('about-edit-title').value = c.intro_title || '';
+    document.getElementById('about-edit-body1').value = c.intro_body_1 || '';
+    document.getElementById('about-edit-body2').value = c.intro_body_2 || '';
+    document.getElementById('about-edit-differentials').value = (c.differentials || []).join('\n');
+    document.getElementById('about-edit-address').value = c.showroom_address || '';
+    document.getElementById('about-edit-phone').value = c.showroom_phone || '';
+    document.getElementById('about-edit-email').value = c.showroom_email || '';
+    document.getElementById('about-edit-hours').value = c.showroom_hours || '';
+    aboutLoaded = true;
+}
+
+async function saveAboutContent() {
+    const btn = document.getElementById('btn-save-about');
+    const msg = document.getElementById('about-save-msg');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+    msg.textContent = '';
+
+    const differentials = document.getElementById('about-edit-differentials').value
+        .split('\n').map(s => s.trim()).filter(Boolean);
+
+    const payload = {
+        intro_title: document.getElementById('about-edit-title').value,
+        intro_body_1: document.getElementById('about-edit-body1').value,
+        intro_body_2: document.getElementById('about-edit-body2').value,
+        differentials: differentials,
+        showroom_address: document.getElementById('about-edit-address').value,
+        showroom_phone: document.getElementById('about-edit-phone').value,
+        showroom_email: document.getElementById('about-edit-email').value,
+        showroom_hours: document.getElementById('about-edit-hours').value,
+    };
+
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/about_content?id=eq.1`, {
+        method: 'PATCH',
+        headers: { ...headers(true), 'Prefer': 'return=minimal' },
+        body: JSON.stringify(payload)
+    });
+
+    btn.disabled = false;
+    btn.textContent = 'Save Changes';
+
+    if (res.ok) {
+        msg.textContent = '✅ Saved successfully!';
+        msg.className = 'save-msg success';
+    } else {
+        msg.textContent = '❌ Error saving. Please try again.';
+        msg.className = 'save-msg error';
+    }
+}
 
 async function uploadPhoto(input) {
     const file = input.files[0];
