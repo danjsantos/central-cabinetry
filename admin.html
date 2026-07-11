@@ -325,6 +325,10 @@
         <div class="modal-body">
             <input type="hidden" id="flooring-edit-id">
             <div class="field">
+                <label>Title</label>
+                <input type="text" id="flooring-edit-label">
+            </div>
+            <div class="field">
                 <label>Image URL</label>
                 <input type="text" id="flooring-edit-image" placeholder="https://..." oninput="previewFlooringImage()">
                 <div class="upload-row">
@@ -355,6 +359,10 @@
         </div>
         <div class="modal-body">
             <input type="hidden" id="outdoor-edit-id">
+            <div class="field">
+                <label>Title</label>
+                <input type="text" id="outdoor-edit-label">
+            </div>
             <div class="field">
                 <label>Image URL</label>
                 <input type="text" id="outdoor-edit-image" placeholder="https://..." oninput="previewOutdoorImage()">
@@ -579,7 +587,8 @@ function openOutdoorModalById(id) {
     const row = outdoorCache[id];
     if (!row) return;
     document.getElementById('outdoor-edit-id').value = row.id;
-    document.getElementById('modal-outdoor-title').textContent = 'Edit — ' + row.label;
+    document.getElementById('modal-outdoor-title').textContent = 'Edit Photo';
+    document.getElementById('outdoor-edit-label').value = row.label || '';
     document.getElementById('outdoor-edit-image').value = row.image_url || '';
     document.getElementById('outdoor-save-msg').textContent = '';
     previewOutdoorImage();
@@ -605,7 +614,10 @@ async function saveOutdoorImage() {
     btn.textContent = 'Saving...';
     msg.textContent = '';
 
-    const payload = { image_url: document.getElementById('outdoor-edit-image').value || null };
+    const payload = {
+        label: document.getElementById('outdoor-edit-label').value,
+        image_url: document.getElementById('outdoor-edit-image').value || null
+    };
 
     const res = await fetch(`${SUPABASE_URL}/rest/v1/outdoor_images?id=eq.${id}`, {
         method: 'PATCH',
@@ -710,7 +722,8 @@ function openFlooringModalById(id) {
     const row = flooringCache[id];
     if (!row) return;
     document.getElementById('flooring-edit-id').value = row.id;
-    document.getElementById('modal-flooring-title').textContent = 'Edit — ' + row.label;
+    document.getElementById('modal-flooring-title').textContent = 'Edit Photo';
+    document.getElementById('flooring-edit-label').value = row.label || '';
     document.getElementById('flooring-edit-image').value = row.image_url || '';
     document.getElementById('flooring-save-msg').textContent = '';
     previewFlooringImage();
@@ -736,7 +749,10 @@ async function saveFlooringImage() {
     btn.textContent = 'Saving...';
     msg.textContent = '';
 
-    const payload = { image_url: document.getElementById('flooring-edit-image').value || null };
+    const payload = {
+        label: document.getElementById('flooring-edit-label').value,
+        image_url: document.getElementById('flooring-edit-image').value || null
+    };
 
     const res = await fetch(`${SUPABASE_URL}/rest/v1/flooring_images?id=eq.${id}`, {
         method: 'PATCH',
