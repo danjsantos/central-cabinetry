@@ -193,6 +193,7 @@
         <div class="admin-tabs">
             <button class="tab-btn active" onclick="switchTab('styles')" id="tab-btn-styles">Door Styles</button>
             <button class="tab-btn" onclick="switchTab('about')" id="tab-btn-about">About Us Page</button>
+            <button class="tab-btn" onclick="switchTab('flooring')" id="tab-btn-flooring">Flooring Photos</button>
         </div>
 
         <div id="tab-styles">
@@ -242,6 +243,13 @@
                 <button class="btn-save" style="max-width:220px" id="btn-save-about" onclick="saveAboutContent()">Save Changes</button>
                 <div id="about-save-msg" class="save-msg"></div>
             </div>
+        </div>
+
+        <div id="tab-flooring" style="display:none">
+            <div class="admin-title">Flooring Photos</div>
+            <div class="admin-sub">Click Edit to swap any flooring photo. Changes appear on the website immediately.</div>
+            <div id="loading-flooring">Loading...</div>
+            <div id="flooring-grid" class="styles-grid" style="display:none"></div>
         </div>
     </div>
 </div>
@@ -295,6 +303,37 @@
         <div class="modal-footer">
             <button class="btn-cancel" onclick="closeModal()">Cancel</button>
             <button class="btn-save" id="btn-save" onclick="saveStyle()">Save Changes</button>
+        </div>
+    </div>
+</div>
+
+<!-- FLOORING EDIT MODAL -->
+<div class="modal-overlay" id="modal-flooring">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="modal-flooring-title">Edit Flooring Photo</h3>
+            <button class="btn-close" onclick="closeFlooringModal()">✕</button>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="flooring-edit-id">
+            <div class="field">
+                <label>Image URL</label>
+                <input type="text" id="flooring-edit-image" placeholder="https://..." oninput="previewFlooringImage()">
+                <div class="upload-row">
+                    <button type="button" class="btn-upload" onclick="document.getElementById('flooring-file-input').click()">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        Upload Photo
+                    </button>
+                    <span id="flooring-upload-status">or paste a URL above</span>
+                </div>
+                <input type="file" id="flooring-file-input" accept="image/*" onchange="uploadFlooringPhoto(this)">
+                <img id="flooring-img-preview" class="img-preview" alt="Preview">
+            </div>
+            <div id="flooring-save-msg" class="save-msg"></div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-cancel" onclick="closeFlooringModal()">Cancel</button>
+            <button class="btn-save" id="btn-save-flooring" onclick="saveFlooringImage()">Save Changes</button>
         </div>
     </div>
 </div>
@@ -451,14 +490,150 @@ document.getElementById('modal').addEventListener('click', function(e) {
 });
 
 let aboutLoaded = false;
+let flooringLoaded = false;
+let flooringCache = {};
 
 function switchTab(tab) {
     document.getElementById('tab-styles').style.display = tab === 'styles' ? 'block' : 'none';
     document.getElementById('tab-about').style.display = tab === 'about' ? 'block' : 'none';
+    document.getElementById('tab-flooring').style.display = tab === 'flooring' ? 'block' : 'none';
     document.getElementById('tab-btn-styles').classList.toggle('active', tab === 'styles');
     document.getElementById('tab-btn-about').classList.toggle('active', tab === 'about');
+    document.getElementById('tab-btn-flooring').classList.toggle('active', tab === 'flooring');
     if (tab === 'about' && !aboutLoaded) loadAboutContent();
+    if (tab === 'flooring' && !flooringLoaded) loadFlooringImages();
 }
+
+async function loadFlooringImages() {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/flooring_images?order=sort_order`, {
+        headers: headers(true)
+    });
+    const rows = await res.json();
+
+    const grid = document.getElementById('flooring-grid');
+    const loading = document.getElementById('loading-flooring');
+
+    flooringCache = {};
+    rows.forEach(r => { flooringCache[r.id] = r; });
+
+    grid.innerHTML = rows.map(r => `
+        <div class="style-card">
+            <div class="style-card-img" style="${r.image_url ? 'background-image:url(' + r.image_url + ')' : ''}"></div>
+            <div class="style-card-body">
+                <div class="style-card-name">${r.label}</div>
+                <button class="btn-edit" onclick="openFlooringModalById('${r.id}')">Edit</button>
+            </div>
+        </div>
+    `).join('');
+
+    loading.style.display = 'none';
+    grid.style.display = 'grid';
+    flooringLoaded = true;
+}
+
+function openFlooringModalById(id) {
+    const row = flooringCache[id];
+    if (!row) return;
+    document.getElementById('flooring-edit-id').value = row.id;
+    document.getElementById('modal-flooring-title').textContent = 'Edit — ' + row.label;
+    document.getElementById('flooring-edit-image').value = row.image_url || '';
+    document.getElementById('flooring-save-msg').textContent = '';
+    previewFlooringImage();
+    document.getElementById('modal-flooring').classList.add('open');
+}
+
+function closeFlooringModal() {
+    document.getElementById('modal-flooring').classList.remove('open');
+}
+
+function previewFlooringImage() {
+    const url = document.getElementById('flooring-edit-image').value;
+    const img = document.getElementById('flooring-img-preview');
+    if (url) { img.src = url; img.style.display = 'block'; }
+    else { img.style.display = 'none'; }
+}
+
+async function saveFlooringImage() {
+    const id = document.getElementById('flooring-edit-id').value;
+    const btn = document.getElementById('btn-save-flooring');
+    const msg = document.getElementById('flooring-save-msg');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+    msg.textContent = '';
+
+    const payload = { image_url: document.getElementById('flooring-edit-image').value || null };
+
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/flooring_images?id=eq.${id}`, {
+        method: 'PATCH',
+        headers: { ...headers(true), 'Prefer': 'return=minimal' },
+        body: JSON.stringify(payload)
+    });
+
+    btn.disabled = false;
+    btn.textContent = 'Save Changes';
+
+    if (res.ok) {
+        msg.textContent = '✅ Saved successfully!';
+        msg.className = 'save-msg success';
+        flooringLoaded = false;
+        await loadFlooringImages();
+        setTimeout(closeFlooringModal, 1200);
+    } else {
+        msg.textContent = '❌ Error saving. Please try again.';
+        msg.className = 'save-msg error';
+    }
+}
+
+async function uploadFlooringPhoto(input) {
+    const file = input.files[0];
+    if (!file) return;
+
+    const status = document.getElementById('flooring-upload-status');
+    status.textContent = 'Uploading...';
+    status.className = 'uploading';
+
+    const ext = file.name.split('.').pop();
+    const filename = `flooring/${Date.now()}.${ext}`;
+
+    try {
+        const res = await fetch(
+            `${SUPABASE_URL}/storage/v1/object/images/${filename}`,
+            {
+                method: 'POST',
+                headers: {
+                    'apikey': SUPABASE_ANON,
+                    'Authorization': `Bearer ${accessToken || SUPABASE_ANON}`,
+                    'Content-Type': file.type,
+                    'x-upsert': 'true'
+                },
+                body: file
+            }
+        );
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.message || `HTTP ${res.status}`);
+        }
+
+        const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/images/${filename}`;
+
+        document.getElementById('flooring-edit-image').value = publicUrl;
+        previewFlooringImage();
+
+        status.textContent = '✅ Photo uploaded!';
+        status.className = 'done';
+    } catch (err) {
+        console.error('Upload error:', err);
+        status.textContent = '❌ Upload failed: ' + err.message;
+        status.className = 'err';
+    }
+
+    input.value = '';
+}
+
+document.getElementById('modal-flooring').addEventListener('click', function(e) {
+    if (e.target === this) closeFlooringModal();
+});
 
 async function loadAboutContent() {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/about_content?id=eq.1&select=*`, {
