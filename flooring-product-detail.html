@@ -8,6 +8,9 @@
     <style>
         #product-specs-list li { color: #444 !important; border-bottom-color: #eee !important; }
         #product-specs-list li strong { color: #1A1A2E !important; }
+        .fp-photo{background:#f5f5f5;border-radius:8px;padding:16px;display:flex;justify-content:center}
+        .fp-photo img{width:100%;max-width:100%;border-radius:6px;transition:transform .15s}
+        .fp-photo img:hover{transform:scale(1.02)}
     </style>
 </head>
 <body data-page="flooring-product-detail">
@@ -35,8 +38,8 @@
     <div class="container" id="detail-content" style="padding-top:32px">
         <div class="breadcrumb" style="margin-bottom:24px"><a href="index.html">&#127968;</a> &rsaquo; <a href="flooring.html">Flooring</a> &rsaquo; <span data-ck="breadcrumb-name">Loading...</span></div>
         <div class="detail-grid">
-            <div class="detail-swatch" style="order:2">
-                <img src="" data-ck="product-image" alt="Product photo">
+            <div class="fp-photo" style="order:2">
+                <img src="" data-ck="product-image" alt="Product photo" onclick="openLightbox(this.src)" style="cursor:zoom-in">
             </div>
             <div class="detail-specs" style="order:1;background:#fff;border:1px solid #eee;color:#1A1A2E">
                 <h1 data-ck="page-title" style="font-size:28px;margin-bottom:16px;color:#1A1A2E">Loading...</h1>
@@ -47,6 +50,9 @@
         </div>
     </div>
 </section>
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+    <img id="lightboxImg" src="" alt="Product photo">
+</div>
 
 <footer>
     <div class="footer-inner">
