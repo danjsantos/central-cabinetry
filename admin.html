@@ -482,7 +482,7 @@
                 <select id="fp-edit-section">
                     <option value="hardwood">Engineered Hardwood</option>
                     <option value="wpc">WPC Luxury Vinyl Plank</option>
-                    <option value="spc">SPC Luxury Vinyl Plank</option>
+                    <option value="spc">LVP Luxury Vinyl Plank</option>
                 </select>
             </div>
             <div class="field">
@@ -1023,7 +1023,7 @@ async function loadFlooringProducts() {
     flooringProductsCache = {};
     (rows || []).forEach(r => { flooringProductsCache[r.id] = r; });
 
-    const sectionLabel = { hardwood: 'Engineered Hardwood', wpc: 'WPC', spc: 'SPC' };
+    const sectionLabel = { hardwood: 'Engineered Hardwood', wpc: 'WPC', spc: 'LVP' };
     grid.innerHTML = (rows || []).map(r => `
         <div class="style-card">
             <div class="style-card-img" style="${r.image_url ? 'background-image:url(' + r.image_url + ')' : ''}">
