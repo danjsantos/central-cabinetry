@@ -142,11 +142,11 @@ async function loadDoorStyles() {
 function renderStyles(styles) {
     const grid = document.getElementById('ds-grid');
     grid.innerHTML = styles.map(s => `
-        <div class="ds-card" data-name="${s.name.toLowerCase()}" data-type="${s.style_type.toLowerCase()}" data-code="${s.code.toLowerCase()}">
-            <div class="ds-card-img" style="${s.image_url ? 'background-image:url(' + s.image_url + ')' : 'background:#ddd'}">
+        <div class="ds-listing-card" data-name="${s.name.toLowerCase()}" data-type="${s.style_type.toLowerCase()}" data-code="${s.code.toLowerCase()}">
+            <div class="ds-listing-bg" style="${s.banner_image ? 'background-image:url(' + s.banner_image + ')' : ''}">
                 ${s.image_url ? `<img src="${s.image_url}" class="ds-swatch" alt="${s.name}">` : ''}
             </div>
-            <div class="ds-bar">
+            <div class="ds-listing-bar">
                 <span>(${s.code}) ${s.name}</span>
                 <a href="door-style-detail.html?code=${s.code.toLowerCase()}">VIEW DETAILS</a>
             </div>
@@ -156,7 +156,7 @@ function renderStyles(styles) {
 
 function filterStyles() {
     const q = document.getElementById('searchInput').value.toLowerCase().trim();
-    const cards = document.querySelectorAll('.ds-card');
+    const cards = document.querySelectorAll('.ds-listing-card');
     let visible = 0;
     cards.forEach(card => {
         const match = !q ||
