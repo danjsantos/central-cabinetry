@@ -18,6 +18,10 @@
                     if (el.tagName === 'IMG') el.src = row.value;
                     else el.style.backgroundImage = "url('" + row.value + "')";
                 } else {
+                    // Prevent overwriting with the old incorrect email
+                    if ((row.content_key === 'footer-email' || row.content_key === 'showroom-email') && row.value.includes('centralhomegood.com')) {
+                        return;
+                    }
                     el.textContent = row.value;
                 }
             });
