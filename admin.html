@@ -196,6 +196,7 @@
             <button class="tab-btn" onclick="switchTab('flooring')" id="tab-btn-flooring">Flooring Photos</button>
             <button class="tab-btn" onclick="switchTab('outdoor')" id="tab-btn-outdoor">Outdoor Photos</button>
             <button class="tab-btn" onclick="switchTab('gallery')" id="tab-btn-gallery">Gallery Photos</button>
+<button class="tab-btn" onclick="switchTab('showcase')" id="tab-btn-showcase">Home Showcase</button>
             <button class="tab-btn" onclick="switchTab('sitecontent')" id="tab-btn-sitecontent">Site Content</button>
         </div>
 
@@ -286,6 +287,14 @@
             <button class="btn-save" style="max-width:200px;margin-bottom:20px" onclick="openNewGalleryPhotoModal()">+ Add New Photo</button>
             <div id="loading-gallery-photos">Loading...</div>
             <div id="gallery-photos-grid" class="styles-grid" style="display:none"></div>
+        </div>
+
+        <div id="tab-showcase" style="display:none">
+            <div class="admin-title">Home Showcase Strip</div>
+            <div class="admin-sub">Manage the horizontal strip of product photos shown on the home page. Changes appear immediately.</div>
+            <button class="btn-save" style="max-width:200px;margin-bottom:20px" onclick="openNewShowcaseModal()">+ Add New Showcase Photo</button>
+            <div id="loading-showcase">Loading...</div>
+            <div id="showcase-grid" class="styles-grid" style="display:none"></div>
         </div>
 
         <div id="tab-sitecontent" style="display:none">
@@ -641,12 +650,51 @@
 </div>
 
 <!-- GALLERY PHOTO MODAL (catalog, unlimited items) -->
-<div class="modal-overlay" id="modal-gallery-photo">
-    <div class="modal">
-        <div class="modal-header">
-            <h3 id="modal-gallery-photo-title">Gallery Photo</h3>
-            <button class="btn-close" onclick="closeGalleryPhotoModal()">✕</button>
+    <div class="modal-overlay" id="modal-showcase">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modal-showcase-title">Showcase Photo</h3>
+                <button class="btn-close" onclick="closeShowcaseModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="showcase-edit-id">
+                <div class="field">
+                    <label>Label (optional, shown on hover)</label>
+                    <input type="text" id="showcase-edit-label" placeholder="e.g. Modern Kitchen">
+                </div>
+                <div class="field">
+                    <label>Photo</label>
+                    <input type="text" id="showcase-edit-image" placeholder="https://..." oninput="previewShowcaseImage()">
+                    <div class="upload-row">
+                        <button type="button" class="btn-upload" onclick="document.getElementById('showcase-file-input').click()">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                            Upload Photo
+                        </button>
+                        <span id="showcase-upload-status">or paste a URL above</span>
+                    </div>
+                    <input type="file" id="showcase-file-input" accept="image/*" onchange="uploadShowcasePhoto(this)">
+                    <img id="showcase-img-preview" class="img-preview" alt="Preview">
+                </div>
+                <div class="field">
+                    <label>Sort Order (lower numbers show first)</label>
+                    <input type="number" id="showcase-edit-sort" value="10">
+                </div>
+                <div id="showcase-save-msg" class="save-msg"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-cancel" onclick="closeShowcaseModal()">Cancel</button>
+                <button class="btn-cancel" id="btn-delete-showcase" style="color:#c0392b;border-color:#e0b4ae" onclick="deleteShowcase()">Delete</button>
+                <button class="btn-save" id="btn-save-showcase" onclick="saveShowcase()">Save</button>
+            </div>
         </div>
+    </div>
+
+    <div class="modal-overlay" id="modal-gallery-photo">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="modal-gallery-photo-title">Gallery Photo</h3>
+                <button class="btn-close" onclick="closeGalleryPhotoModal()">✕</button>
+            </div>
         <div class="modal-body">
             <input type="hidden" id="gp-edit-id">
             <div class="field">
@@ -1911,3 +1959,159 @@ async function uploadPhoto(input) {
 </script>
 </body>
 </html>
+
+// HOME SHOWCASE MANAGEMENT
+let showcaseCache = {};
+
+async function loadShowcase() {
+    const loading = document.getElementById('loading-showcase');
+    const grid = document.getElementById('showcase-grid');
+    loading.style.display = 'block';
+    grid.style.display = 'none';
+
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/home_showcase?order=sort_order`, {
+        headers: headers(true)
+    });
+    const rows = await res.json();
+    showcaseCache = {};
+    rows.forEach(r => { showcaseCache[r.id] = r; });
+
+    grid.innerHTML = rows.map(r => `
+        <div class="style-card">
+            <div class="style-card-img" style="${r.image_url ? 'background-image:url(' + r.image_url + ')' : ''}"></div>
+            <div class="style-card-body">
+                <div class="style-card-name">${r.label || 'No Label'}</div>
+                <button class="btn-edit" onclick="openShowcaseModalById('${r.id}')">Edit</button>
+            </div>
+        </div>
+    `).join('');
+
+    loading.style.display = 'none';
+    grid.style.display = 'grid';
+}
+
+function openShowcaseModalById(id) {
+    const row = showcaseCache[id];
+    if (!row) return;
+    openShowcaseModal(row);
+}
+
+function openNewShowcaseModal() {
+    openShowcaseModal({ id: '', label: '', image_url: '', sort_order: 10 });
+}
+
+function openShowcaseModal(row) {
+    document.getElementById('showcase-edit-id').value = row.id;
+    const isNew = !row.id;
+    document.getElementById('modal-showcase-title').textContent = isNew ? 'Add Showcase Photo' : 'Edit Showcase Photo';
+    document.getElementById('showcase-edit-label').value = row.label || '';
+    document.getElementById('showcase-edit-image').value = row.image_url || '';
+    document.getElementById('showcase-edit-sort').value = row.sort_order || 10;
+    document.getElementById('btn-delete-showcase').style.display = isNew ? 'none' : 'block';
+    document.getElementById('showcase-save-msg').textContent = '';
+    previewShowcaseImage();
+    document.getElementById('modal-showcase').classList.add('open');
+}
+
+function closeShowcaseModal() {
+    document.getElementById('modal-showcase').classList.remove('open');
+}
+
+function previewShowcaseImage() {
+    const url = document.getElementById('showcase-edit-image').value;
+    const img = document.getElementById('showcase-img-preview');
+    if (url) { img.src = url; img.style.display = 'block'; }
+    else { img.style.display = 'none'; }
+}
+
+async function uploadShowcasePhoto(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const status = document.getElementById('showcase-upload-status');
+    status.textContent = 'Uploading...';
+    status.className = 'uploading';
+
+    const ext = file.name.split('.').pop();
+    const filename = `home-showcase/${Date.now()}.${ext}`;
+
+    try {
+        const res = await fetch(
+            `${SUPABASE_URL}/storage/v1/object/images/${filename}`,
+            {
+                method: 'POST',
+                headers: {
+                    'apikey': SUPABASE_ANON,
+                    'Authorization': `Bearer ${accessToken || SUPABASE_ANON}`,
+                    'Content-Type': file.type,
+                    'x-upsert': 'true'
+                },
+                body: file
+            }
+        );
+        if (!res.ok) throw new Error('Upload failed');
+        const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/images/${filename}`;
+        document.getElementById('showcase-edit-image').value = publicUrl;
+        previewShowcaseImage();
+        status.textContent = '✅ Uploaded!';
+        status.className = 'done';
+    } catch (err) {
+        status.textContent = '❌ Error uploading.';
+        status.className = 'err';
+    }
+}
+
+async function saveShowcase() {
+    const id = document.getElementById('showcase-edit-id').value;
+    const isNew = !id;
+    const btn = document.getElementById('btn-save-showcase');
+    const msg = document.getElementById('showcase-save-msg');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+
+    const payload = {
+        label: document.getElementById('showcase-edit-label').value,
+        image_url: document.getElementById('showcase-edit-image').value,
+        sort_order: parseInt(document.getElementById('showcase-edit-sort').value) || 10
+    };
+
+    const url = isNew ? `${SUPABASE_URL}/rest/v1/home_showcase` : `${SUPABASE_URL}/rest/v1/home_showcase?id=eq.${id}`;
+    const res = await fetch(url, {
+        method: isNew ? 'POST' : 'PATCH',
+        headers: { ...headers(true), 'Prefer': 'return=minimal' },
+        body: JSON.stringify(payload)
+    });
+
+    if (res.ok) {
+        msg.textContent = '✅ Saved!';
+        msg.className = 'save-msg success';
+        await loadShowcase();
+        setTimeout(closeShowcaseModal, 1000);
+    } else {
+        msg.textContent = '❌ Error saving.';
+        msg.className = 'save-msg error';
+    }
+    btn.disabled = false;
+    btn.textContent = 'Save';
+}
+
+async function deleteShowcase() {
+    const id = document.getElementById('showcase-edit-id').value;
+    if (!id || !confirm('Delete this showcase photo?')) return;
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/home_showcase?id=eq.${id}`, {
+        method: 'DELETE',
+        headers: headers(true)
+    });
+    if (res.ok) {
+        await loadShowcase();
+        closeShowcaseModal();
+    }
+}
+
+// Update switchTab to include showcase
+const originalSwitchTab = switchTab;
+switchTab = function(tab) {
+    originalSwitchTab(tab);
+    if (tab === 'showcase') loadShowcase();
+};
+
+document.getElementById('modal-showcase').addEventListener('click', function(e) { if (e.target === this) closeShowcaseModal(); });

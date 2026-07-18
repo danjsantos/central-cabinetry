@@ -7,6 +7,29 @@ document.addEventListener('click',function(e){
     if(nb&&!nb.contains(e.target))document.getElementById('navLinks').classList.remove('open');
 });
 
+// HOME SHOWCASE
+async function initShowcase() {
+    const track = document.getElementById('home-showcase-track');
+    if (!track) return;
+
+    try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/home_showcase?order=sort_order`, {
+            headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` }
+        });
+        const rows = await res.json();
+        if (rows.length > 0) {
+            track.innerHTML = rows.map(r => `
+                <div class="showcase-item">
+                    <img src="${r.image_url}" alt="${r.label || 'Product Showcase'}">
+                    ${r.label ? `<div class="showcase-label">${r.label}</div>` : ''}
+                </div>
+            `).join('');
+        }
+    } catch (err) {
+        console.error('Error loading showcase:', err);
+    }
+}
+
 // HERO CAROUSEL
 var slideIndex=0;
 function initHero(){
@@ -117,4 +140,5 @@ function initSearch() {
 window.addEventListener('DOMContentLoaded', function() {
     initHero();
     initSearch();
+    initShowcase();
 });
