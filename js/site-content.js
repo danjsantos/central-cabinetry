@@ -14,6 +14,9 @@
         rows.forEach(function(row) {
             if (row.value === null || row.value === undefined || row.value === '') return;
             document.querySelectorAll('[data-ck="' + row.content_key + '"]').forEach(function(el) {
+                // Prevent overwriting the new hardcoded logo
+                if (row.content_key === 'site-logo') return;
+
                 if (row.content_type === 'image') {
                     if (el.tagName === 'IMG') el.src = row.value;
                     else el.style.backgroundImage = "url('" + row.value + "')";
