@@ -41,7 +41,8 @@
             document.querySelectorAll('[data-ck="breadcrumb-name"]').forEach(function(el) { el.textContent = p.name; });
 
             const img = document.querySelector('[data-ck="product-image"]');
-            if (img && p.image_url) img.src = p.image_url;
+if (img) img.parentElement.classList.add('image-zoom-container');
+if (img && p.image_url) img.src = p.image_url;
 
             const rowsToShow = [
                 ['Type', SECTION_LABEL[p.category] || p.category],
