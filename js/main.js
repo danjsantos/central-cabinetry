@@ -141,4 +141,23 @@ window.addEventListener('DOMContentLoaded', function() {
     initHero();
     initSearch();
     // initShowcase();
+
+    // Inner Image Zoom Feature
+    const containers = document.querySelectorAll('.image-zoom-container');
+    containers.forEach((container) => {
+        const img = container.querySelector('img');
+        if (!img) return;
+
+        container.addEventListener('mousemove', (e) => {
+            const rect = container.getBoundingClientRect();
+            const x = ((e.clientX - rect.left) / rect.width) * 100;
+            const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+            img.style.transformOrigin = `${x}% ${y}%`;
+        });
+
+        container.addEventListener('mouseleave', () => {
+            img.style.transformOrigin = 'center center';
+        });
+    });
 });
