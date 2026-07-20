@@ -140,5 +140,5 @@ function initSearch() {
 window.addEventListener('DOMContentLoaded', function() {
     initHero();
     initSearch();
-    initShowcase();
+    // initShowcase();
 });
