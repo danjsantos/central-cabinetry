@@ -70,7 +70,11 @@
 <!-- PRODUCT SHOWCASE STRIP -->
 <section class="showcase-strip">
     <div class="showcase-inner" id="showcaseStrip">
-        <!-- loaded from Supabase -->
+        <div class="showcase-item"><img src="images/lifestyle/gallery_1.jpg" alt=""></div>
+        <div class="showcase-item"><img src="images/lifestyle/gallery_2.jpg" alt=""></div>
+        <div class="showcase-item"><img src="images/lifestyle/gallery_3.jpg" alt=""></div>
+        <div class="showcase-item"><img src="images/lifestyle/gallery_4.jpg" alt=""></div>
+        <div class="showcase-item"><img src="images/lifestyle/gallery_5.jpg" alt=""></div>
     </div>
 </section>
 
@@ -234,25 +238,6 @@
 </script>
 <script src="js/main.js"></script>
 <script src="js/site-content.js"></script>
-<script>
-async function loadShowcaseStrip() {
-    const res = await fetch('https://apxelbabvviuwqpfivtr.supabase.co/rest/v1/home_showcase?active=eq.true&order=sort_order', {
-        headers: {
-            'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFweGVsYmFidnZpdXdxcGZpdnRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NjEyOTYsImV4cCI6MjA5OTIzNzI5Nn0.EWt2FRAkJH86Is9P_uDjKDXnJ0O1J2qdg_BuctQavvY',
-            'Authorization': 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFweGVsYmFidnZpdXdxcGZpdnRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM2NjEyOTYsImV4cCI6MjA5OTIzNzI5Nn0.EWt2FRAkJH86Is9P_uDjKDXnJ0O1J2qdg_BuctQavvY'
-        }
-    });
-    const photos = await res.json();
-    const strip = document.getElementById('showcaseStrip');
-    if (!strip || !photos || photos.length === 0) return;
-    strip.innerHTML = photos.map(p => `
-        <div class="showcase-item">
-            <img src="${p.image_url}" alt="${p.label || ''}">
-            ${p.label ? `<div class="showcase-label">${p.label}</div>` : ''}
-        </div>
-    `).join('');
-}
-loadShowcaseStrip();
-</script>
+
 </body>
 </html>
