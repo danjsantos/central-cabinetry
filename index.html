@@ -236,6 +236,42 @@
         }).join('');
     })
     .catch(function(err) { console.error('Home door styles load error:', err); });
+    fetch(`${SUPABASE_URL}/rest/v1/home_showcase?active=eq.true&order=sort_order.asc`, {
+    headers: {
+        'apikey': SUPABASE_ANON,
+        'Authorization': `Bearer ${SUPABASE_ANON}`
+    }
+})
+.then(function(res) {
+    if (!res.ok) throw new Error('Supabase error: ' + res.status);
+    return res.json();
+})
+.then(function(images) {
+    const track = document.getElementById('home-showcase-track');
+
+    if (!track || !Array.isArray(images) || images.length === 0) {
+        return;
+    }
+
+    const validImages = images.filter(function(item) {
+        return item.image_url;
+    });
+
+    if (validImages.length === 0) {
+        return;
+    }
+
+    track.innerHTML = validImages.map(function(item) {
+        return `
+            <div class="showcase-item">
+                <img src="${item.image_url}" alt="${item.alt_text || 'Showcase'}">
+            </div>
+        `;
+    }).join('');
+})
+.catch(function(err) {
+    console.error('Home showcase load error:', err);
+});
 })();
 </script>
 <script src="js/main.js"></script>
