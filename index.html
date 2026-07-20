@@ -236,7 +236,7 @@
         }).join('');
     })
     .catch(function(err) { console.error('Home door styles load error:', err); });
-    fetch(`${SUPABASE_URL}/rest/v1/home_showcase?active=eq.true&order=sort_order.asc`, {
+    fetch(`${SUPABASE_URL}/rest/v1/home_showcase?order=sort_order.asc`, {
     headers: {
         'apikey': SUPABASE_ANON,
         'Authorization': `Bearer ${SUPABASE_ANON}`
