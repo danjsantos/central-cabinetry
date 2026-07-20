@@ -157,7 +157,7 @@ function renderStyles(styles) {
     const grid = document.getElementById('ds-grid');
     grid.innerHTML = styles.map(s => `
         <div class="ds-listing-card" data-name="${s.name.toLowerCase()}" data-type="${s.style_type.toLowerCase()}" data-code="${s.code.toLowerCase()}">
-    <a href="door-style-detail.html?code=${s.code.toLowerCase()}" class="ds-listing-bg" style="display:block;${s.banner_image ? 'background-image:url(' + s.banner_image + ')' : ''}">
+    <a href="door-style-detail.html?code=${s.code.toLowerCase()}" class="ds-listing-bg" style="display:block;position:relative;${s.banner_image ? 'background-image:url(' + s.banner_image + ')' : ''}"
     ${s.image_url ? `<img src="${s.image_url}" class="ds-swatch" alt="${s.name}">` : ''}
 </a>
             <div class="ds-listing-bar">
