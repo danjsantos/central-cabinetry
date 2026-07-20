@@ -229,3 +229,26 @@ footer{background:var(--dark);color:#aaa;padding:50px 24px 20px}
     .gallery-grid,.gallery-full-grid{grid-template-columns:repeat(2,1fr)}
     .floating-bar{display:none}
 }
+/* Image Zoom Box Frame */
+.image-zoom-container {
+  position: relative;
+  overflow: hidden;
+  display: block;
+  width: 100%;
+  border-radius: 8px; /* Optional: matches your site's rounded corners */
+  cursor: zoom-in;
+}
+
+/* Base Image */
+.image-zoom-container img {
+  width: 100%;
+  height: auto;
+  display: block;
+  transition: transform 0.1s ease-out;
+  transform-origin: center center;
+}
+
+/* Scale Up Image On Hover */
+.image-zoom-container:hover img {
+  transform: scale(2.2); /* Adjust zoom level here (e.g., 1.8 to 2.5) */
+}
