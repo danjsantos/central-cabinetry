@@ -1,63 +1,106 @@
-// api/upload.js — Vercel serverless function
+// api/upload.js — Vercel serverless function (no external dependencies)
 // Proxies file uploads to Supabase Storage using the service role key (server-side only).
 // The service role key is never exposed to the browser.
 //
-// Usage (multipart/form-data POST):
-//   POST /api/upload
-//   FormData fields:
-//     file     — the binary file
-//     path     — storage path inside the "images" bucket, e.g. "door-styles/1234.jpg"
-//     token    — the authenticated user's Supabase access_token (for auth check)
+// Usage: POST /api/upload  (multipart/form-data)
+//   Fields: file (binary), path (string), token (string)
 
 const SUPABASE_URL = 'https://apxelbabvviuwqpfivtr.supabase.co';
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 export const config = { api: { bodyParser: false } };
 
+// Parse multipart/form-data without external libraries
+function parseMultipart(req) {
+    return new Promise((resolve, reject) => {
+        const contentType = req.headers['content-type'] || '';
+        const boundaryMatch = contentType.match(/boundary=(.+)$/);
+        if (!boundaryMatch) return reject(new Error('No boundary found'));
+        const boundary = boundaryMatch[1];
+
+        const chunks = [];
+        req.on('data', chunk => chunks.push(chunk));
+        req.on('end', () => {
+            const body = Buffer.concat(chunks);
+            const fields = {};
+            const files = {};
+
+            const delimiter = Buffer.from('\r\n--' + boundary);
+            const closeDelimiter = Buffer.from('\r\n--' + boundary + '--');
+
+            let start = body.indexOf('--' + boundary + '\r\n');
+            if (start === -1) return reject(new Error('No parts found'));
+            start += ('--' + boundary + '\r\n').length;
+
+            while (start < body.length) {
+                let end = body.indexOf(delimiter, start);
+                const isLast = end === -1;
+                if (isLast) {
+                    end = body.indexOf(closeDelimiter, start);
+                    if (end === -1) end = body.length;
+                }
+
+                const part = body.slice(start, end);
+                const headerEnd = part.indexOf('\r\n\r\n');
+                if (headerEnd === -1) break;
+
+                const headerStr = part.slice(0, headerEnd).toString();
+                const partBody = part.slice(headerEnd + 4);
+
+                const nameMatch = headerStr.match(/name="([^"]+)"/);
+                const filenameMatch = headerStr.match(/filename="([^"]+)"/);
+                const contentTypeMatch = headerStr.match(/Content-Type:\s*(.+)/i);
+
+                if (nameMatch) {
+                    const name = nameMatch[1];
+                    if (filenameMatch) {
+                        files[name] = {
+                            buffer: partBody,
+                            filename: filenameMatch[1],
+                            mimetype: contentTypeMatch ? contentTypeMatch[1].trim() : 'application/octet-stream'
+                        };
+                    } else {
+                        fields[name] = partBody.toString();
+                    }
+                }
+
+                if (isLast) break;
+                start = end + delimiter.length + '\r\n'.length;
+            }
+
+            resolve({ fields, files });
+        });
+        req.on('error', reject);
+    });
+}
+
 export default async function handler(req, res) {
-    // CORS headers so admin.html (same domain) can call this
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
+    if (req.method === 'OPTIONS') return res.status(200).end();
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+    let fields, files;
+    try {
+        ({ fields, files } = await parseMultipart(req));
+    } catch (err) {
+        return res.status(400).json({ error: 'Failed to parse form: ' + err.message });
     }
 
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method not allowed' });
-    }
-
-    // Parse multipart form data using the raw stream
-    const { IncomingForm } = await import('formidable');
-    const form = new IncomingForm({ maxFileSize: 20 * 1024 * 1024 }); // 20 MB limit
-
-    const { fields, files } = await new Promise((resolve, reject) => {
-        form.parse(req, (err, fields, files) => {
-            if (err) reject(err);
-            else resolve({ fields, files });
-        });
-    });
-
-    const storagePath = Array.isArray(fields.path) ? fields.path[0] : fields.path;
-    const userToken = Array.isArray(fields.token) ? fields.token[0] : fields.token;
-    const uploadedFile = Array.isArray(files.file) ? files.file[0] : files.file;
+    const storagePath = fields.path;
+    const userToken = fields.token;
+    const uploadedFile = files.file;
 
     if (!storagePath || !uploadedFile) {
         return res.status(400).json({ error: 'Missing path or file' });
     }
 
-    // Verify the user token is a valid Supabase JWT (basic check — not empty)
     if (!userToken || userToken.length < 20) {
         return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    // Read the file buffer
-    const fs = await import('fs');
-    const fileBuffer = fs.readFileSync(uploadedFile.filepath);
-    const contentType = uploadedFile.mimetype || 'application/octet-stream';
-
-    // Upload to Supabase Storage using service role key
     const uploadRes = await fetch(
         `${SUPABASE_URL}/storage/v1/object/images/${storagePath}`,
         {
@@ -65,10 +108,10 @@ export default async function handler(req, res) {
             headers: {
                 'apikey': SERVICE_ROLE_KEY,
                 'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
-                'Content-Type': contentType,
+                'Content-Type': uploadedFile.mimetype,
                 'x-upsert': 'true'
             },
-            body: fileBuffer
+            body: uploadedFile.buffer
         }
     );
 
