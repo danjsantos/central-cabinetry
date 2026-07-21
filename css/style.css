@@ -254,29 +254,29 @@ footer{background:var(--dark);color:#aaa;padding:50px 24px 20px}
 }
 /* Image Lightbox */
 
-.image-lightbox {
+#lightbox {
     display:none;
     position:fixed;
     z-index:99999;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
+    inset:0;
     background:rgba(0,0,0,.9);
     justify-content:center;
     align-items:center;
 }
 
-.image-lightbox img {
-    max-width:90%;
-    max-height:90%;
-    object-fit:contain;
+#lightbox.open {
+    display:flex;
 }
 
-.lightbox-close {
+#lightbox img {
+    max-width:90%;
+    max-height:90%;
+}
+
+#lightbox span {
     position:absolute;
     top:20px;
-    right:40px;
+    right:35px;
     color:white;
     font-size:50px;
     cursor:pointer;
