@@ -20,7 +20,7 @@ async function initShowcase() {
         if (rows.length > 0) {
             track.innerHTML = rows.map(r => `
                 <div class="showcase-item">
-                    <img src="${r.image_url}" alt="${r.label || 'Product Showcase'}">
+                    <img src="${r.image_url}" alt="${r.label || 'Product Showcase'}" onclick="openLightbox(this.src)">
                     ${r.label ? `<div class="showcase-label">${r.label}</div>` : ''}
                 </div>
             `).join('');
