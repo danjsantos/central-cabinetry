@@ -1,0 +1,5 @@
+{
+  "env": {
+    "SUPABASE_SERVICE_ROLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFweGVsYmFidnZpdXdxcGZpdnRyIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MzY2MTI5NiwiZXhwIjoyMDk5MjM3Mjk2fQ.EuAGa4g6_xAD3kQcOuriNGFbr1yqaGJc8jcguL8dVM0"
+  }
+}

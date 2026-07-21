@@ -963,19 +963,11 @@ async function uploadBannerPhoto(input) {
     const filename = `door-styles-banner/${Date.now()}.${ext}`;
 
     try {
-        const res = await fetch(
-            `${SUPABASE_URL}/storage/v1/object/images/${filename}`,
-            {
-                method: 'POST',
-                headers: {
-                    'apikey': SUPABASE_ANON,
-                    'Authorization': `Bearer ${accessToken || SUPABASE_ANON}`,
-                    'Content-Type': file.type,
-                    'x-upsert': 'true'
-                },
-                body: file
-            }
-        );
+        const _fd = new FormData();
+        _fd.append('file', file);
+        _fd.append('path', filename);
+        _fd.append('token', accessToken || '');
+        const res = await fetch('/api/upload', { method: 'POST', body: _fd });
         if (!res.ok) {
             const err = await res.json().catch(() => ({}));
             throw new Error(err.message || `HTTP ${res.status}`);
@@ -1132,11 +1124,11 @@ async function uploadGalleryPhotoPhoto(input) {
     const ext = file.name.split('.').pop();
     const filename = `gallery-photos/${Date.now()}.${ext}`;
     try {
-        const res = await fetch(`${SUPABASE_URL}/storage/v1/object/images/${filename}`, {
-            method: 'POST',
-            headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${accessToken || SUPABASE_ANON}`, 'Content-Type': file.type, 'x-upsert': 'true' },
-            body: file
-        });
+        const _fd = new FormData();
+        _fd.append('file', file);
+        _fd.append('path', filename);
+        _fd.append('token', accessToken || '');
+        const res = await fetch('/api/upload', { method: 'POST', body: _fd });
         if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.message || `HTTP ${res.status}`); }
         const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/images/${filename}`;
         document.getElementById('gp-edit-image').value = publicUrl;
@@ -1269,11 +1261,11 @@ async function uploadFlooringProductPhoto(input) {
     const ext = file.name.split('.').pop();
     const filename = `flooring-products/${Date.now()}.${ext}`;
     try {
-        const res = await fetch(`${SUPABASE_URL}/storage/v1/object/images/${filename}`, {
-            method: 'POST',
-            headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${accessToken || SUPABASE_ANON}`, 'Content-Type': file.type, 'x-upsert': 'true' },
-            body: file
-        });
+        const _fd = new FormData();
+        _fd.append('file', file);
+        _fd.append('path', filename);
+        _fd.append('token', accessToken || '');
+        const res = await fetch('/api/upload', { method: 'POST', body: _fd });
         if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.message || `HTTP ${res.status}`); }
         const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/images/${filename}`;
         document.getElementById('fp-edit-image').value = publicUrl;
@@ -1386,11 +1378,11 @@ async function uploadOutdoorProductPhoto(input) {
     const ext = file.name.split('.').pop();
     const filename = `outdoor-products/${Date.now()}.${ext}`;
     try {
-        const res = await fetch(`${SUPABASE_URL}/storage/v1/object/images/${filename}`, {
-            method: 'POST',
-            headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${accessToken || SUPABASE_ANON}`, 'Content-Type': file.type, 'x-upsert': 'true' },
-            body: file
-        });
+        const _fd = new FormData();
+        _fd.append('file', file);
+        _fd.append('path', filename);
+        _fd.append('token', accessToken || '');
+        const res = await fetch('/api/upload', { method: 'POST', body: _fd });
         if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.message || `HTTP ${res.status}`); }
         const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/images/${filename}`;
         document.getElementById('op-edit-image').value = publicUrl;
@@ -1504,19 +1496,11 @@ async function uploadSiteContentPhoto(key, input) {
     const filename = `site-content/${Date.now()}.${ext}`;
 
     try {
-        const res = await fetch(
-            `${SUPABASE_URL}/storage/v1/object/images/${filename}`,
-            {
-                method: 'POST',
-                headers: {
-                    'apikey': SUPABASE_ANON,
-                    'Authorization': `Bearer ${accessToken || SUPABASE_ANON}`,
-                    'Content-Type': file.type,
-                    'x-upsert': 'true'
-                },
-                body: file
-            }
-        );
+        const _fd = new FormData();
+        _fd.append('file', file);
+        _fd.append('path', filename);
+        _fd.append('token', accessToken || '');
+        const res = await fetch('/api/upload', { method: 'POST', body: _fd });
         if (!res.ok) {
             const err = await res.json().catch(() => ({}));
             throw new Error(err.message || `HTTP ${res.status}`);
@@ -1679,19 +1663,11 @@ async function uploadOutdoorPhoto(input) {
     const filename = `outdoor/${Date.now()}.${ext}`;
 
     try {
-        const res = await fetch(
-            `${SUPABASE_URL}/storage/v1/object/images/${filename}`,
-            {
-                method: 'POST',
-                headers: {
-                    'apikey': SUPABASE_ANON,
-                    'Authorization': `Bearer ${accessToken || SUPABASE_ANON}`,
-                    'Content-Type': file.type,
-                    'x-upsert': 'true'
-                },
-                body: file
-            }
-        );
+        const _fd = new FormData();
+        _fd.append('file', file);
+        _fd.append('path', filename);
+        _fd.append('token', accessToken || '');
+        const res = await fetch('/api/upload', { method: 'POST', body: _fd });
 
         if (!res.ok) {
             const err = await res.json().catch(() => ({}));
@@ -1814,19 +1790,11 @@ async function uploadFlooringPhoto(input) {
     const filename = `flooring/${Date.now()}.${ext}`;
 
     try {
-        const res = await fetch(
-            `${SUPABASE_URL}/storage/v1/object/images/${filename}`,
-            {
-                method: 'POST',
-                headers: {
-                    'apikey': SUPABASE_ANON,
-                    'Authorization': `Bearer ${accessToken || SUPABASE_ANON}`,
-                    'Content-Type': file.type,
-                    'x-upsert': 'true'
-                },
-                body: file
-            }
-        );
+        const _fd = new FormData();
+        _fd.append('file', file);
+        _fd.append('path', filename);
+        _fd.append('token', accessToken || '');
+        const res = await fetch('/api/upload', { method: 'POST', body: _fd });
 
         if (!res.ok) {
             const err = await res.json().catch(() => ({}));
@@ -1928,19 +1896,11 @@ async function uploadPhoto(input) {
 
     try {
         // Upload to Supabase Storage bucket "images"
-        const res = await fetch(
-            `${SUPABASE_URL}/storage/v1/object/images/${filename}`,
-            {
-                method: 'POST',
-                headers: {
-                    'apikey': SUPABASE_ANON,
-                    'Authorization': `Bearer ${accessToken || SUPABASE_ANON}`,
-                    'Content-Type': file.type,
-                    'x-upsert': 'true'
-                },
-                body: file
-            }
-        );
+        const _fd = new FormData();
+        _fd.append('file', file);
+        _fd.append('path', filename);
+        _fd.append('token', accessToken || '');
+        const res = await fetch('/api/upload', { method: 'POST', body: _fd });
 
         if (!res.ok) {
             const err = await res.json().catch(() => ({}));
@@ -2042,19 +2002,11 @@ async function uploadShowcasePhoto(input) {
     const filename = `home-showcase/${Date.now()}.${ext}`;
 
     try {
-        const res = await fetch(
-            `${SUPABASE_URL}/storage/v1/object/images/${filename}`,
-            {
-                method: 'POST',
-                headers: {
-                    'apikey': SUPABASE_ANON,
-                    'Authorization': `Bearer ${accessToken || SUPABASE_ANON}`,
-                    'Content-Type': file.type,
-                    'x-upsert': 'true'
-                },
-                body: file
-            }
-        );
+        const _fd = new FormData();
+        _fd.append('file', file);
+        _fd.append('path', filename);
+        _fd.append('token', accessToken || '');
+        const res = await fetch('/api/upload', { method: 'POST', body: _fd });
         if (!res.ok) throw new Error('Upload failed');
         const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/images/${filename}`;
         document.getElementById('showcase-edit-image').value = publicUrl;
