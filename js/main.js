@@ -160,7 +160,7 @@ window.addEventListener('DOMContentLoaded', function() {
             img.style.transformOrigin = 'center center';
         });
     });
-});
+
 // your existing main.js code above...
 
 
