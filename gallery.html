@@ -122,8 +122,15 @@ function openLightboxFromEl(el){
             return;
         }
         grid.innerHTML = photos.map(function(p) {
-            return `<div class="gallery-full-item" style="background-image:url('${p.image_url || ''}')" onclick="openLightboxFromEl(this)"><div class="gallery-label">${p.caption || ''}</div></div>`;
+            const imgName = (p.image_url || '').split('/').pop().replace(/\.[^.]+$/, '');
+            return `<div class="gallery-full-item" style="background-image:url('${p.image_url || ''}')" data-img="${imgName}" onclick="openLightboxFromEl(this)"><div class="gallery-label">${p.caption || ''}</div></div>`;
         }).join('');
+        // Auto-open from URL param (e.g. ?img=gallery_1)
+        const urlImg = new URLSearchParams(window.location.search).get('img');
+        if (urlImg) {
+            const target = grid.querySelector('[data-img="' + urlImg + '"]');
+            if (target) { setTimeout(function(){ openLightboxFromEl(target); }, 100); }
+        }
     })
     .catch(function(err) { console.error('Gallery load error:', err); });
 })();
