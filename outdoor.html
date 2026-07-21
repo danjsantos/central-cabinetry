@@ -130,7 +130,7 @@
 <div class="page-banner">
     <p class="breadcrumb"><a href="index.html">Home</a> &rsaquo; Outdoor Living</p>
     <h1>Outdoor Living</h1>
-    <p>Outdoor Kitchens &bull; Hoyt Furniture &bull; Gallery &bull; Get a Quote</p>
+    <p>Outdoor Kitchens &bull; Outdoor Furniture &bull; Gallery &bull; Get a Quote</p>
 </div>
 
 <section>
@@ -149,7 +149,7 @@
         <!-- TABS -->
         <div class="outdoor-tabs">
             <button class="outdoor-tab active" onclick="showTab('kitchens')">Outdoor Kitchens</button>
-            <button class="outdoor-tab" onclick="showTab('hoyt')">Hoyt Outdoor Furniture</button>
+            <button class="outdoor-tab" onclick="showTab('furniture')">Outdoor Furniture</button>
             <button class="outdoor-tab" onclick="showTab('gallery')">Gallery</button>
             <button class="outdoor-tab" onclick="showTab('quote')">Request a Quote</button>
         </div>
@@ -207,13 +207,13 @@
             </div>
         </div>
 
-        <!-- TAB: HOYT FURNITURE -->
-        <div id="tab-hoyt" class="tab-content">
+        <!-- TAB: OUTDOOR FURNITURE -->
+        <div id="tab-furniture" class="tab-content">
             <div class="product-hero">
                 <div>
-                    <h2>Hoyt Collection</h2>
-                    <h3>AllModern Outdoor Furniture</h3>
-                    <p>The Hoyt Collection by AllModern combines sophisticated design with durable aluminum construction. Weather-resistant, UV-resistant cushions, and arrives fully assembled. Perfect for patios, pools, and outdoor living areas across the Myrtle Beach area.</p>
+                    <h2>Outdoor Furniture Collection</h2>
+                    <h3>Premium Outdoor Furniture</h3>
+                    <p>Our outdoor furniture collection combines sophisticated design with durable aluminum construction. It features weather-resistant materials, UV-resistant cushions, and fully assembled pieces. Perfect for patios, pools, and outdoor living areas across the Myrtle Beach area.</p>
                     <div class="specs-bar">
                         <span class="spec-badge">&#9989; UV-Resistant Cushions</span>
                         <span class="spec-badge">&#9989; Rust-Resistant Frame</span>
@@ -228,13 +228,13 @@
             <h3 style="font-size:20px;font-weight:700;margin-bottom:6px;color:#1A1A2E">Featured Pieces</h3>
             <p style="color:#666;font-size:14px;margin-bottom:24px">Available in multiple frame colors and cushion options. Contact us to see current inventory and pricing.</p>
 
-            <div id="hoyt-products" class="products-grid">
+            <div id="furniture-products" class="products-grid">
                 <p style="color:#888;padding:20px">Loading...</p>
             </div>
 
             <div style="background:#f5f5f5;border-radius:12px;padding:32px;text-align:center">
                 <h3 style="font-size:18px;font-weight:700;color:#1A1A2E;margin-bottom:8px">Visit Our Showroom</h3>
-                <p style="color:#888;font-size:14px;margin-bottom:20px">See the Hoyt Collection in person at our Myrtle Beach location. Available colors and stock updated regularly.</p>
+                <p style="color:#888;font-size:14px;margin-bottom:20px">See our outdoor furniture collection in person at our Myrtle Beach location. Available colors and stock updated regularly.</p>
                 <a href="#" onclick="showTabDirect('quote')" class="btn-primary">Request a Quote</a>
             </div>
         </div>
@@ -249,7 +249,7 @@
                     <img src="images/outdoor-kitchen-4.jpg" data-slug="outdoor-kitchen-4" alt="Outdoor Kitchen Project" style="width:100%;height:300px;object-fit:cover;border-radius:8px;display:block">
                 </div>
                 <div class="gallery-item">
-                    <img src="images/hoyt-4piece-set.jpg" data-slug="hoyt-4piece-set" alt="Hoyt Lounge Setup" style="width:100%;height:200px;object-fit:cover;border-radius:8px;display:block">
+                    <img src="images/hoyt-4piece-set.jpg" data-slug="hoyt-4piece-set" alt="Outdoor Furniture Lounge Setup" style="width:100%;height:200px;object-fit:cover;border-radius:8px;display:block">
                 </div>
                 <div class="gallery-item">
                     <img src="images/hoyt-conversation-set.jpg" data-slug="hoyt-conversation-set" alt="Outdoor Dining Area" style="width:100%;height:200px;object-fit:cover;border-radius:8px;display:block">
@@ -295,7 +295,7 @@
                             <label>I am interested in</label>
                             <select>
                                 <option>Outdoor Kitchen</option>
-                                <option>Hoyt Outdoor Furniture</option>
+                                <option>Outdoor Furniture</option>
                                 <option>Both</option>
                                 <option>Other</option>
                             </select>
@@ -351,7 +351,7 @@
         <div class="footer-col">
             <h4>Outdoor Living</h4>
             <a href="outdoor.html">Outdoor Kitchens</a>
-            <a href="outdoor.html">Hoyt Furniture</a>
+            <a href="outdoor.html">Outdoor Furniture</a>
             <a href="outdoor.html">Gallery</a>
             <a href="outdoor.html">Request a Quote</a>
         </div>
@@ -408,13 +408,13 @@ function filterOutdoor() {
     })
     .catch(function(err) { console.error('Outdoor images load error:', err); });
 
-    // Hoyt furniture catalog (unlimited items, added/removed via admin)
+    // Outdoor furniture catalog (unlimited items, added/removed via admin)
     fetch(`${SUPABASE_URL}/rest/v1/outdoor_products?active=eq.true&order=sort_order`, {
         headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` }
     })
     .then(function(res) { return res.json(); })
     .then(function(products) {
-        const container = document.getElementById('hoyt-products');
+        const container = document.getElementById('furniture-products');
         if (!container || !Array.isArray(products)) return;
         if (!products.length) {
             container.innerHTML = '<p style="color:#888">No products listed yet.</p>';
