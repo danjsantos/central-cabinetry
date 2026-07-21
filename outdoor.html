@@ -22,9 +22,8 @@
         .search-input-wrap input:focus{outline:none;border-color:#2A6496}
         .search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#888;font-size:18px}
         .search-count{font-size:13px;color:#888;margin-top:-16px;margin-bottom:16px}
-        .outdoor-tabs{display:flex;gap:0;border-bottom:2px solid #eee;margin-bottom:40px;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none}
-        .outdoor-tabs::-webkit-scrollbar{display:none}
-        .outdoor-tab{padding:14px 28px;font-size:40px;font-weight:600;color:#888;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none}
+        .outdoor-tabs{display:flex;flex-wrap:wrap;gap:0;border-bottom:2px solid #eee;margin-bottom:40px}
+        .outdoor-tab{padding:12px 24px;font-size:22px;font-weight:800;color:#888;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none}
         .outdoor-tab.active{color:#2A6496;border-bottom-color:#2A6496}
         .outdoor-tab:hover{color:#2A6496}
 
@@ -82,7 +81,7 @@
         }
         @media(max-width:500px){
             .products-grid{grid-template-columns:1fr 1fr}
-            .outdoor-tab{padding:10px 16px;font-size:30px}
+            .outdoor-tab{padding:10px 14px;font-size:18px;font-weight:800}
         }
     </style>
 </head>
