@@ -127,7 +127,42 @@ async function submitContact(e){
         button.textContent='Send Message';
     }
 }
-function submitAppointment(e){e.preventDefault();alert('Appointment confirmed! We will contact you within 24 hours.');e.target.reset();nextStep(1)}
+async function submitAppointment(e){
+  e.preventDefault();
+  var f=e.target;
+  var btn=f.querySelector('button[type="submit"]');
+  var orig=btn.textContent;
+  btn.textContent='Sending...';
+  btn.disabled=true;
+  var nameEl=document.getElementById('apptName');
+  var name=nameEl?nameEl.value:'';
+  var allInputs=f.querySelectorAll('input,select,textarea');
+  var email=allInputs[1]?allInputs[1].value:'';
+  var phone=allInputs[2]?allInputs[2].value:'';
+  var ctype=f.querySelector('input[name="type"]:checked');
+  var customerType=ctype?ctype.value:'';
+  var date=allInputs[4]?allInputs[4].value:'';
+  var time=allInputs[5]?allInputs[5].value:'';
+  var appointmentType=allInputs[6]?allInputs[6].value:'';
+  var notes=allInputs[7]?allInputs[7].value:'';
+  try{
+    var res=await fetch('/api/send-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'appointment',name:name,email:email,phone:phone,customerType:customerType,date:date,time:time,appointmentType:appointmentType,notes:notes})});
+    var data=await res.json();
+    if(res.ok){
+      alert('Appointment confirmed! We will contact you within 24 hours.');
+      f.reset();
+      nextStep(1);
+    } else {
+      alert('Sorry, there was an error. Please call us at (843) 712-1001.');
+      console.error(data);
+    }
+  } catch(err){
+    alert('Sorry, there was an error. Please call us at (843) 712-1001.');
+    console.error(err);
+  }
+  btn.textContent=orig;
+  btn.disabled=false;
+}
 
 // SMOOTH SCROLL
 document.querySelectorAll('a[href^="#"]').forEach(function(a){
