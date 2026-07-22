@@ -198,6 +198,12 @@
                 </div>
             </div>
 
+            <h3 style="font-size:20px;font-weight:700;margin:32px 0 6px;color:#1A1A2E">Outdoor Kitchen Items</h3>
+            <p style="color:#666;font-size:14px;margin-bottom:24px">Browse available outdoor kitchen components and equipment. Contact us for pricing and configuration options.</p>
+            <div id="kitchen-products" class="products-grid" style="margin-bottom:32px">
+                <p style="color:#888;padding:20px">Loading...</p>
+            </div>
+
             <div style="background:#f5f5f5;border-radius:12px;padding:32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px">
                 <div>
                     <h3 style="font-size:18px;font-weight:700;color:#1A1A2E;margin-bottom:6px">Ready to design your outdoor kitchen?</h3>
@@ -408,19 +414,16 @@ function filterOutdoor() {
     })
     .catch(function(err) { console.error('Outdoor images load error:', err); });
 
-    // Outdoor furniture catalog (unlimited items, added/removed via admin)
+    // Outdoor kitchen and furniture catalogs (unlimited items, added/removed via admin)
     fetch(`${SUPABASE_URL}/rest/v1/outdoor_products?active=eq.true&order=sort_order`, {
         headers: { 'apikey': SUPABASE_ANON, 'Authorization': `Bearer ${SUPABASE_ANON}` }
     })
     .then(function(res) { return res.json(); })
     .then(function(products) {
-        const container = document.getElementById('furniture-products');
-        if (!container || !Array.isArray(products)) return;
-        if (!products.length) {
-            container.innerHTML = '<p style="color:#888">No products listed yet.</p>';
-            return;
-        }
-        container.innerHTML = products.map(function(p) {
+        if (!Array.isArray(products)) return;
+        function productCards(items) {
+            if (!items.length) return '<p style="color:#888">No products listed yet.</p>';
+            return items.map(function(p) {
             return `
                 <a href="outdoor-product-detail.html?id=${p.id}" class="product-card" style="text-decoration:none;color:inherit;display:block;cursor:pointer">
                     <img src="${p.image_url || ''}" alt="${p.name}">
@@ -429,7 +432,14 @@ function filterOutdoor() {
                         <div class="product-card-desc">${p.description || ''}</div>
                     </div>
                 </a>`;
-        }).join('');
+            }).join('');
+        }
+        const kitchenProducts = products.filter(function(p) { return p.category === 'Outdoor Kitchen'; });
+        const furnitureProducts = products.filter(function(p) { return p.category !== 'Outdoor Kitchen'; });
+        const kitchenContainer = document.getElementById('kitchen-products');
+        const furnitureContainer = document.getElementById('furniture-products');
+        if (kitchenContainer) kitchenContainer.innerHTML = productCards(kitchenProducts);
+        if (furnitureContainer) furnitureContainer.innerHTML = productCards(furnitureProducts);
     })
     .catch(function(err) { console.error('Outdoor products load error:', err); });
 })();
