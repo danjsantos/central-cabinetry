@@ -55,6 +55,23 @@
                 .join('');
             const featureRows = features.map(function(feature) { return `<li>${feature}</li>`; }).join('');
             specsList.innerHTML = detailRows + featureRows;
+
+            const galleryPrefix = `product-gallery-${id}-`;
+            fetch(`${SUPABASE_URL}/rest/v1/outdoor_images?slug=like.${encodeURIComponent(galleryPrefix + '*')}&order=sort_order&select=id,image_url,label`, { headers: h() })
+                .then(function(res) { return res.ok ? res.json() : []; })
+                .then(function(photos) {
+                    if (!Array.isArray(photos) || !photos.length) return;
+                    const gallery = document.getElementById('product-gallery');
+                    photos.forEach(function(photo) {
+                        const image = document.createElement('img');
+                        image.src = photo.image_url;
+                        image.alt = photo.label || `${p.name} additional photo`;
+                        image.loading = 'lazy';
+                        image.onclick = function() { openLightbox(image.src); };
+                        gallery.appendChild(image);
+                    });
+                    document.getElementById('product-gallery-section').style.display = 'block';
+                });
         })
         .catch(function(err) { console.error('Outdoor product load error:', err); });
 })();

@@ -651,6 +651,14 @@
                 <input type="file" id="op-file-input" accept="image/*" onchange="uploadOutdoorProductPhoto(this)">
                 <img id="op-img-preview" class="img-preview" alt="Preview">
             </div>
+            <div class="field" id="op-gallery-section">
+                <label>Additional Photos</label>
+                <p style="color:#888;margin:0 0 10px;font-size:14px">These appear farther down the product detail page.</p>
+                <div id="op-gallery-list" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px"></div>
+                <button type="button" class="btn-upload" id="op-gallery-upload-btn" onclick="document.getElementById('op-gallery-file-input').click()">+ Upload Additional Photos</button>
+                <input type="file" id="op-gallery-file-input" accept="image/*" multiple onchange="uploadOutdoorGalleryPhotos(this)" style="display:none">
+                <span id="op-gallery-upload-status" style="display:block;color:#888;margin-top:8px"></span>
+            </div>
             <div class="field">
                 <div class="checkbox-row">
                     <input type="checkbox" id="op-edit-active">
@@ -1355,7 +1363,85 @@ function openOutdoorProductModal(p) {
     document.getElementById('btn-delete-op').style.display = isNew ? 'none' : 'block';
     document.getElementById('op-save-msg').textContent = '';
     previewOutdoorProductImage();
+    prepareOutdoorProductGallery(p.id);
     document.getElementById('modal-outdoor-product').classList.add('open');
+}
+function prepareOutdoorProductGallery(productId) {
+    const list = document.getElementById('op-gallery-list');
+    const button = document.getElementById('op-gallery-upload-btn');
+    const status = document.getElementById('op-gallery-upload-status');
+    list.innerHTML = '';
+    status.textContent = '';
+    button.style.display = productId ? 'inline-flex' : 'none';
+    if (!productId) {
+        status.textContent = 'Save the new product first, then edit it again to add more photos.';
+        return;
+    }
+    loadOutdoorProductGallery(productId);
+}
+async function loadOutdoorProductGallery(productId) {
+    const list = document.getElementById('op-gallery-list');
+    list.innerHTML = '<span style="color:#888">Loading photos...</span>';
+    const prefix = `product-gallery-${productId}-`;
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/outdoor_images?slug=like.${encodeURIComponent(prefix + '*')}&order=sort_order`, { headers: headers(true) });
+    const rows = res.ok ? await res.json() : [];
+    list.innerHTML = '';
+    rows.forEach(function(photo) {
+        const card = document.createElement('div');
+        card.style.cssText = 'position:relative;border:1px solid #ddd;border-radius:8px;overflow:hidden;background:#f5f5f5';
+        const img = document.createElement('img');
+        img.src = photo.image_url;
+        img.alt = photo.label || 'Additional product photo';
+        img.style.cssText = 'width:100%;height:90px;object-fit:cover;display:block';
+        const remove = document.createElement('button');
+        remove.type = 'button';
+        remove.textContent = 'Remove';
+        remove.style.cssText = 'width:100%;border:0;padding:7px;background:#fff;color:#c0392b;cursor:pointer;font-weight:600';
+        remove.onclick = function() { deleteOutdoorGalleryPhoto(photo.id, productId); };
+        card.append(img, remove);
+        list.appendChild(card);
+    });
+    if (!rows.length) list.innerHTML = '<span style="color:#888;grid-column:1/-1">No additional photos yet.</span>';
+}
+async function uploadOutdoorGalleryPhotos(input) {
+    const productId = document.getElementById('op-edit-id').value;
+    const files = Array.from(input.files || []);
+    if (!productId || !files.length) return;
+    const status = document.getElementById('op-gallery-upload-status');
+    const productName = document.getElementById('op-edit-name').value || 'Outdoor product';
+    status.textContent = `Uploading 0 of ${files.length}...`;
+    try {
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            const ext = file.name.split('.').pop();
+            const stamp = Date.now() + '-' + i;
+            const filename = `outdoor-products/${productId}/gallery/${stamp}.${ext}`;
+            const form = new FormData();
+            form.append('file', file);
+            form.append('path', filename);
+            form.append('token', accessToken || '');
+            const uploadRes = await fetch('/api/upload', { method: 'POST', body: form });
+            if (!uploadRes.ok) throw new Error('Photo upload failed');
+            const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/images/${filename}`;
+            const rowRes = await fetch(`${SUPABASE_URL}/rest/v1/outdoor_images`, {
+                method: 'POST',
+                headers: { ...headers(true), 'Prefer': 'return=minimal' },
+                body: JSON.stringify({ slug: `product-gallery-${productId}-${stamp}`, label: `${productName} additional photo`, image_url: publicUrl, sort_order: Date.now() + i })
+            });
+            if (!rowRes.ok) throw new Error('Photo could not be added to the gallery');
+            status.textContent = `Uploading ${i + 1} of ${files.length}...`;
+        }
+        status.textContent = 'Additional photos uploaded!';
+        await loadOutdoorProductGallery(productId);
+    } catch (err) {
+        status.textContent = 'Upload failed: ' + err.message;
+    }
+    input.value = '';
+}
+async function deleteOutdoorGalleryPhoto(photoId, productId) {
+    if (!confirm('Remove this additional photo?')) return;
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/outdoor_images?id=eq.${photoId}`, { method: 'DELETE', headers: headers(true) });
+    if (res.ok) loadOutdoorProductGallery(productId);
 }
 function addOutdoorFeature(value) {
     const row = document.createElement('div');
