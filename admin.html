@@ -91,6 +91,14 @@
             font-weight: 600; cursor: pointer;
         }
         .btn-edit:hover { background: #1a4a6b; }
+        .style-order-controls { display: flex; gap: 8px; margin-bottom: 8px; }
+        .btn-order {
+            flex: 1; border: 1px solid #aac4de; background: #f4f8fc;
+            color: #2A6496; border-radius: 6px; padding: 7px 5px;
+            font-size: 12px; font-weight: 600; cursor: pointer;
+        }
+        .btn-order:hover { background: #ddeaf5; }
+        .btn-order:disabled { opacity: .35; cursor: not-allowed; }
 
         /* MODAL */
         .modal-overlay {
@@ -206,7 +214,7 @@
 
         <div id="tab-styles">
             <div class="admin-title">Door Styles</div>
-            <div class="admin-sub">Click Edit to update any door style, or add a new one. Changes appear on the website immediately.</div>
+            <div class="admin-sub">Use Move Earlier and Move Later to change the order on the cabinet page. Changes appear on the website immediately.</div>
             <button class="btn-save" style="max-width:200px;margin-bottom:20px" onclick="openNewStyleModal()">+ Add New Door Style</button>
             <div id="loading-styles">Loading...</div>
             <div id="styles-grid" class="styles-grid" style="display:none"></div>
@@ -763,6 +771,7 @@ const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFz
 
 let accessToken = null;
 let stylesCache = {};  // store styles by id to avoid inline JSON in onclick
+let stylesList = [];
 
 function headers(withAuth = false) {
     const h = { 'apikey': SUPABASE_ANON, 'Content-Type': 'application/json' };
@@ -814,10 +823,11 @@ async function loadStyles() {
     const loading = document.getElementById('loading-styles');
 
     // Cache styles by id so onclick can safely look them up without inline JSON
+    stylesList = Array.isArray(styles) ? styles : [];
     stylesCache = {};
     styles.forEach(s => { stylesCache[s.id] = s; });
 
-    grid.innerHTML = styles.map(s => `
+    grid.innerHTML = styles.map((s, index) => `
         <div class="style-card">
             <div class="style-card-img" style="${s.image_url ? 'background-image:url(' + s.image_url + ')' : ''}">
                 <span class="style-card-badge ${s.active ? 'badge-active' : 'badge-hidden'}">
@@ -828,6 +838,10 @@ async function loadStyles() {
                 <div class="style-card-code">(${s.code})</div>
                 <div class="style-card-name">${s.name}</div>
                 <div class="style-card-type">${s.style_type}</div>
+                <div class="style-order-controls">
+                    <button class="btn-order" onclick="moveStyle('${s.id}', -1)" ${index === 0 ? 'disabled' : ''}>← Earlier</button>
+                    <button class="btn-order" onclick="moveStyle('${s.id}', 1)" ${index === styles.length - 1 ? 'disabled' : ''}>Later →</button>
+                </div>
                 <button class="btn-edit" onclick="openModalById('${s.id}')">Edit</button>
             </div>
         </div>
@@ -835,6 +849,37 @@ async function loadStyles() {
 
     loading.style.display = 'none';
     grid.style.display = 'grid';
+}
+
+async function moveStyle(id, direction) {
+    const currentIndex = stylesList.findIndex(style => style.id === id);
+    const targetIndex = currentIndex + direction;
+    if (currentIndex < 0 || targetIndex < 0 || targetIndex >= stylesList.length) return;
+
+    const reordered = stylesList.slice();
+    [reordered[currentIndex], reordered[targetIndex]] = [reordered[targetIndex], reordered[currentIndex]];
+
+    const grid = document.getElementById('styles-grid');
+    grid.style.pointerEvents = 'none';
+    grid.style.opacity = '.6';
+
+    const responses = await Promise.all(reordered.map((style, index) =>
+        fetch(`${SUPABASE_URL}/rest/v1/door_styles?id=eq.${style.id}`, {
+            method: 'PATCH',
+            headers: { ...headers(true), 'Prefer': 'return=minimal' },
+            body: JSON.stringify({ sort_order: index + 1 })
+        })
+    ));
+
+    grid.style.pointerEvents = '';
+    grid.style.opacity = '';
+
+    if (responses.some(response => !response.ok)) {
+        alert('The new door order could not be saved. Please try again.');
+        return;
+    }
+
+    await loadStyles();
 }
 
 function openModalById(id) {
