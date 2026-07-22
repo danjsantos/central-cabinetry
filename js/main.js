@@ -88,36 +88,44 @@ function closeLightbox(){
 
 // FORMS
 async function submitContact(e){
-  e.preventDefault();
-  var f=e.target;
-  var btn=f.querySelector('button[type="submit"]');
-  var orig=btn.textContent;
-  btn.textContent='Sending...';
-  btn.disabled=true;
-  var inputs=f.querySelectorAll('input,select,textarea');
-  var name=inputs[0]?inputs[0].value:'';
-  var email=inputs[1]?inputs[1].value:'';
-  var phone=inputs[2]?inputs[2].value:'';
-  var ctype=f.querySelector('input[name="ctype"]:checked');
-  var customerType=ctype?ctype.value:'';
-  var interest=inputs[4]?inputs[4].value:'';
-  var message=inputs[5]?inputs[5].value:'';
-  try{
-    var res=await fetch('/api/send-email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'contact',name:name,email:email,phone:phone,customerType:customerType,interest:interest,message:message})});
-    var data=await res.json();
-    if(res.ok){
-      alert('Thank you! We will get back to you shortly.');
-      f.reset();
-    } else {
-      alert('Sorry, there was an error sending your message. Please call us at (843) 712-1001.');
-      console.error(data);
+    e.preventDefault();
+    var form=e.target;
+    var button=form.querySelector('button[type="submit"]');
+    var status=form.querySelector('.contact-form-status');
+    var data=new FormData(form);
+    var payload={
+        name:data.get('name'),
+        email:data.get('email'),
+        phone:data.get('phone'),
+        customerType:data.get('ctype'),
+        topic:data.get('topic'),
+        message:data.get('message'),
+        website:data.get('website')
+    };
+
+    button.disabled=true;
+    button.textContent='Sending...';
+    status.style.color='#555';
+    status.textContent='Sending your message...';
+
+    try{
+        var response=await fetch('/api/contact',{
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify(payload)
+        });
+        var result=await response.json().catch(function(){return {};});
+        if(!response.ok) throw new Error(result.error||'Your message could not be sent.');
+        form.reset();
+        status.style.color='#155724';
+        status.textContent='Thank you! Your message was sent successfully.';
+    }catch(error){
+        status.style.color='#b42318';
+        status.textContent=error.message||'Your message could not be sent. Please try again.';
+    }finally{
+        button.disabled=false;
+        button.textContent='Send Message';
     }
-  } catch(err){
-    alert('Sorry, there was an error sending your message. Please call us at (843) 712-1001.');
-    console.error(err);
-  }
-  btn.textContent=orig;
-  btn.disabled=false;
 }
 async function submitAppointment(e){
   e.preventDefault();

@@ -72,14 +72,15 @@
             <div class="contact-form-wrap">
                 <h3 data-ck="form-title">Send a Message</h3>
                 <form onsubmit="submitContact(event)">
-                    <input type="text" placeholder="Your Name" required>
-                    <input type="email" placeholder="Your Email" required>
-                    <input type="tel" placeholder="Your Phone">
+                    <input type="text" name="name" placeholder="Your Name" maxlength="100" required>
+                    <input type="email" name="email" placeholder="Your Email" maxlength="254" required>
+                    <input type="tel" name="phone" placeholder="Your Phone" maxlength="40">
+                    <input type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px">
                     <div class="radio-group">
                         <label><input type="radio" name="ctype" value="homeowner" checked> Homeowner</label>
                         <label><input type="radio" name="ctype" value="dealer"> Dealer / Contractor</label>
                     </div>
-                    <select>
+                    <select name="topic">
                         <option value="">What can we help you with?</option>
                         <option>Kitchen Cabinets</option>
                         <option>Bathroom Vanities</option>
@@ -87,8 +88,9 @@
                         <option>Pricing Information</option>
                         <option>Other</option>
                     </select>
-                    <textarea placeholder="Tell us about your project..."></textarea>
+                    <textarea name="message" maxlength="5000" placeholder="Tell us about your project..."></textarea>
                     <button type="submit" class="btn-primary" style="width:100%">Send Message</button>
+                    <div class="contact-form-status" role="status" aria-live="polite" style="margin-top:12px;font-size:14px"></div>
                 </form>
             </div>
         </div>
