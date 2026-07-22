@@ -56,20 +56,55 @@
             const featureRows = features.map(function(feature) { return `<li>${feature}</li>`; }).join('');
             specsList.innerHTML = detailRows + featureRows;
 
+            const manufacturerPhotos = String(p.category || '').toLowerCase().includes('outdoor kitchen') ? [
+                { image_url: 'images/modular-grill-islands/modular-grill-island-hero.jpg', label: 'Complete modular outdoor kitchen' },
+                { image_url: 'images/modular-grill-islands/modular-grill-island-sink.jpg', label: 'Sink and storage module details' },
+                { image_url: 'images/modular-grill-islands/modular-grill-island-grill.jpg', label: 'Five-burner grill module details' },
+                { image_url: 'images/modular-grill-islands/modular-grill-island-refrigerator.jpg', label: 'Refrigerator and drawer module details' },
+                { image_url: 'images/modular-grill-islands/modular-grill-island-corner-cart.jpg', label: 'Corner cart and ice bucket details' },
+                { image_url: 'images/modular-grill-islands/modular-grill-island-table.jpg', label: 'Teak table module details' }
+            ] : [];
+
             const galleryPrefix = `product-gallery-${id}-`;
             fetch(`${SUPABASE_URL}/rest/v1/outdoor_images?slug=like.${encodeURIComponent(galleryPrefix + '*')}&order=sort_order&select=id,image_url,label`, { headers: h() })
                 .then(function(res) { return res.ok ? res.json() : []; })
                 .then(function(photos) {
-                    if (!Array.isArray(photos) || !photos.length) return;
+                    const uploadedPhotos = Array.isArray(photos) ? photos : [];
+                    const galleryPhotos = manufacturerPhotos.concat(uploadedPhotos).filter(function(photo, index, all) {
+                        return photo.image_url && all.findIndex(function(item) { return item.image_url === photo.image_url; }) === index;
+                    });
+                    if (!galleryPhotos.length) return;
+
                     const gallery = document.getElementById('product-gallery');
-                    photos.forEach(function(photo) {
+                    const mainImage = document.getElementById('product-gallery-main');
+
+                    function selectPhoto(photo, button) {
+                        mainImage.src = photo.image_url;
+                        mainImage.alt = photo.label || `${p.name} product photo`;
+                        gallery.querySelectorAll('.op-gallery-thumb').forEach(function(thumb) {
+                            thumb.classList.toggle('active', thumb === button);
+                            thumb.setAttribute('aria-pressed', thumb === button ? 'true' : 'false');
+                        });
+                    }
+
+                    galleryPhotos.forEach(function(photo, index) {
+                        const button = document.createElement('button');
+                        button.type = 'button';
+                        button.className = 'op-gallery-thumb';
+                        button.setAttribute('aria-label', `Show ${photo.label || `${p.name} photo ${index + 1}`}`);
+                        button.setAttribute('aria-pressed', 'false');
+
                         const image = document.createElement('img');
                         image.src = photo.image_url;
-                        image.alt = photo.label || `${p.name} additional photo`;
-                        image.loading = 'lazy';
-                        image.onclick = function() { openLightbox(image.src); };
-                        gallery.appendChild(image);
+                        image.alt = photo.label || `${p.name} thumbnail ${index + 1}`;
+                        image.loading = index === 0 ? 'eager' : 'lazy';
+                        button.appendChild(image);
+                        button.onclick = function() { selectPhoto(photo, button); };
+                        gallery.appendChild(button);
+
+                        if (index === 0) selectPhoto(photo, button);
                     });
+
                     document.getElementById('product-gallery-section').style.display = 'block';
                 });
         })
