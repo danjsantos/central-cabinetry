@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" baseProfile="tiny-ps" version="1.2" width="1254" height="1254" viewBox="0 0 1254 1254" role="img" aria-labelledby="title desc">
+  <title id="title">Central Home</title>
+  <desc id="desc">Gold circular Central Home monogram</desc>
+  <circle cx="627" cy="627" r="603.174" fill="#C88A08"/>
+  <g fill="#FFFFFF">
+    <path d="M 983 521 L 642 705 L 642 1064 L 984 865 L 983 687 L 894 738 L 894 818 L 736 911 L 731 911 L 734 751 L 983 614 Z"/>
+    <path d="M 266 521 L 267 868 L 353 916 L 353 792 L 356 791 L 521 880 L 522 1016 L 607 1065 L 607 713 L 522 666 L 522 785 L 519 786 L 362 706 L 353 700 L 354 569 Z"/>
+    <path d="M 969 497 L 628 311 L 283 496 L 621 686 L 696 644 L 442 502 L 443 499 L 626 398 L 631 399 L 887 543 Z"/>
+    <path d="M 1087 430 L 627 173 L 165 430 L 165 529 L 387 402 L 626 273 L 656 287 L 857 397 L 1087 529 Z"/>
+  </g>
+</svg>
