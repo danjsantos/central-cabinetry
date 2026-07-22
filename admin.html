@@ -269,13 +269,19 @@
             <div id="loading-outdoor">Loading...</div>
             <div id="outdoor-kitchen-grid" class="styles-grid" style="display:none"></div>
 
+            <div class="admin-title" style="margin-top:40px">Outdoor Kitchens — Product Catalog</div>
+            <div class="admin-sub">Add, edit, or remove outdoor kitchen items. These appear in the Outdoor Kitchens tab. Changes appear on the website immediately.</div>
+            <button class="btn-save" style="max-width:240px;margin-bottom:20px" onclick="openNewOutdoorProductModal('Outdoor Kitchen')">+ Add Kitchen Item</button>
+            <div id="loading-kitchen-products">Loading...</div>
+            <div id="kitchen-products-grid" class="styles-grid" style="display:none"></div>
+
             <div class="admin-title" style="margin-top:40px">Hoyt Outdoor Furniture — Fixed Photos</div>
             <div class="admin-sub">These photos are used in the Hoyt tab's hero banner and Gallery highlights (not in the product catalog below).</div>
             <div id="outdoor-hoyt-grid" class="styles-grid" style="display:none"></div>
 
             <div class="admin-title" style="margin-top:40px">Hoyt Outdoor Furniture — Product Catalog</div>
             <div class="admin-sub">Add, edit, or remove furniture pieces. These appear only in the Hoyt Outdoor Furniture tab. Changes appear on the website immediately.</div>
-            <button class="btn-save" style="max-width:200px;margin-bottom:20px" onclick="openNewOutdoorProductModal()">+ Add New Product</button>
+            <button class="btn-save" style="max-width:200px;margin-bottom:20px" onclick="openNewOutdoorProductModal('Outdoor Furniture')">+ Add New Product</button>
             <div id="loading-outdoor-products">Loading...</div>
             <div id="outdoor-products-grid" class="styles-grid" style="display:none"></div>
 
@@ -615,6 +621,13 @@
             <div class="field">
                 <label>Product Name</label>
                 <input type="text" id="op-edit-name">
+            </div>
+            <div class="field">
+                <label>Product Type</label>
+                <select id="op-edit-category">
+                    <option value="Outdoor Kitchen">Outdoor Kitchen Item</option>
+                    <option value="Outdoor Furniture">Outdoor Furniture</option>
+                </select>
             </div>
             <div class="field">
                 <label>Description</label>
@@ -1282,13 +1295,17 @@ document.getElementById('modal-flooring-product').addEventListener('click', func
 async function loadOutdoorProducts() {
     const res = await fetch(`${SUPABASE_URL}/rest/v1/outdoor_products?order=sort_order`, { headers: headers(true) });
     const rows = await res.json();
-    const grid = document.getElementById('outdoor-products-grid');
-    const loading = document.getElementById('loading-outdoor-products');
+    const kitchenGrid = document.getElementById('kitchen-products-grid');
+    const furnitureGrid = document.getElementById('outdoor-products-grid');
+    const kitchenLoading = document.getElementById('loading-kitchen-products');
+    const furnitureLoading = document.getElementById('loading-outdoor-products');
 
     outdoorProductsCache = {};
     (rows || []).forEach(r => { outdoorProductsCache[r.id] = r; });
 
-    grid.innerHTML = (rows || []).map(r => `
+    function productCards(products) {
+        if (!products.length) return '<p style="color:#888">No products added yet.</p>';
+        return products.map(r => `
         <div class="style-card">
             <div class="style-card-img" style="${r.image_url ? 'background-image:url(' + r.image_url + ')' : ''}">
                 <span class="style-card-badge ${r.active ? 'badge-active' : 'badge-hidden'}">${r.active ? 'Active' : 'Hidden'}</span>
@@ -1298,14 +1315,22 @@ async function loadOutdoorProducts() {
                 <button class="btn-edit" onclick="openOutdoorProductModalById('${r.id}')">Edit</button>
             </div>
         </div>
-    `).join('');
+        `).join('');
+    }
 
-    loading.style.display = 'none';
-    grid.style.display = 'grid';
+    const kitchenProducts = (rows || []).filter(r => r.category === 'Outdoor Kitchen');
+    const furnitureProducts = (rows || []).filter(r => r.category !== 'Outdoor Kitchen');
+    kitchenGrid.innerHTML = productCards(kitchenProducts);
+    furnitureGrid.innerHTML = productCards(furnitureProducts);
+
+    kitchenLoading.style.display = 'none';
+    furnitureLoading.style.display = 'none';
+    kitchenGrid.style.display = 'grid';
+    furnitureGrid.style.display = 'grid';
     outdoorProductsLoaded = true;
 }
-function openNewOutdoorProductModal() {
-    openOutdoorProductModal({ id: '', name: '', description: '', image_url: '', active: true });
+function openNewOutdoorProductModal(category) {
+    openOutdoorProductModal({ id: '', name: '', category: category || 'Outdoor Furniture', description: '', image_url: '', active: true });
 }
 function openOutdoorProductModalById(id) {
     const p = outdoorProductsCache[id];
@@ -1316,6 +1341,7 @@ function openOutdoorProductModal(p) {
     document.getElementById('op-edit-id').value = p.id || '';
     document.getElementById('modal-outdoor-product-title').textContent = isNew ? 'Add New Outdoor Product' : 'Edit — ' + p.name;
     document.getElementById('op-edit-name').value = p.name || '';
+    document.getElementById('op-edit-category').value = p.category === 'Outdoor Kitchen' ? 'Outdoor Kitchen' : 'Outdoor Furniture';
     document.getElementById('op-edit-description').value = p.description || '';
     document.getElementById('op-edit-image').value = p.image_url || '';
     document.getElementById('op-edit-active').checked = p.active !== false;
@@ -1341,6 +1367,7 @@ async function saveOutdoorProduct() {
 
     const payload = {
         name: document.getElementById('op-edit-name').value,
+        category: document.getElementById('op-edit-category').value,
         description: document.getElementById('op-edit-description').value || null,
         image_url: document.getElementById('op-edit-image').value || null,
         active: document.getElementById('op-edit-active').checked,

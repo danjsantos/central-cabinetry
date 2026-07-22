@@ -42,7 +42,7 @@
             if (img && p.image_url) img.src = p.image_url;
 
             const rowsToShow = [
-                ['Collection', p.category || 'Hoyt Collection'],
+                ['Category', p.category || 'Outdoor Furniture'],
                 ['SKU', p.sku],
                 ['Color Options', p.color_options],
             ];
