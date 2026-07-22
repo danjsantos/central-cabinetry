@@ -1420,15 +1420,15 @@ async function uploadOutdoorGalleryPhotos(input) {
             form.append('file', file);
             form.append('path', filename);
             form.append('token', accessToken || '');
+            form.append('galleryProductId', productId);
+            form.append('gallerySlug', `product-gallery-${productId}-${stamp}`);
+            form.append('galleryLabel', `${productName} additional photo`);
+            form.append('gallerySortOrder', String(Date.now() + i));
             const uploadRes = await fetch('/api/upload', { method: 'POST', body: form });
-            if (!uploadRes.ok) throw new Error('Photo upload failed');
-            const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/images/${filename}`;
-            const rowRes = await fetch(`${SUPABASE_URL}/rest/v1/outdoor_images`, {
-                method: 'POST',
-                headers: { ...headers(true), 'Prefer': 'return=minimal' },
-                body: JSON.stringify({ slug: `product-gallery-${productId}-${stamp}`, label: `${productName} additional photo`, image_url: publicUrl, sort_order: Date.now() + i })
-            });
-            if (!rowRes.ok) throw new Error('Photo could not be added to the gallery');
+            if (!uploadRes.ok) {
+                const uploadError = await uploadRes.json().catch(() => ({}));
+                throw new Error(uploadError.error || uploadError.message || 'Photo upload failed');
+            }
             status.textContent = `Uploading ${i + 1} of ${files.length}...`;
         }
         status.textContent = 'Additional photos uploaded!';
@@ -1440,7 +1440,11 @@ async function uploadOutdoorGalleryPhotos(input) {
 }
 async function deleteOutdoorGalleryPhoto(photoId, productId) {
     if (!confirm('Remove this additional photo?')) return;
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/outdoor_images?id=eq.${photoId}`, { method: 'DELETE', headers: headers(true) });
+    const res = await fetch('/api/delete-outdoor-gallery', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: photoId, token: accessToken || '' })
+    });
     if (res.ok) loadOutdoorProductGallery(productId);
 }
 function addOutdoorFeature(value) {

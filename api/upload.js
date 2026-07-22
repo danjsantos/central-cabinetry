@@ -121,5 +121,30 @@ export default async function handler(req, res) {
     }
 
     const publicUrl = `${SUPABASE_URL}/storage/v1/object/public/images/${storagePath}`;
+
+    // Gallery rows must be created server-side because the browser user is only
+    // allowed to edit the fixed outdoor image records.
+    if (fields.galleryProductId) {
+        const galleryRes = await fetch(`${SUPABASE_URL}/rest/v1/outdoor_images`, {
+            method: 'POST',
+            headers: {
+                'apikey': SERVICE_ROLE_KEY,
+                'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
+                'Content-Type': 'application/json',
+                'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({
+                slug: fields.gallerySlug,
+                label: fields.galleryLabel || 'Additional product photo',
+                image_url: publicUrl,
+                sort_order: Number(fields.gallerySortOrder) || Date.now()
+            })
+        });
+        if (!galleryRes.ok) {
+            const err = await galleryRes.json().catch(() => ({}));
+            return res.status(galleryRes.status).json({ error: err.message || 'Photo could not be added to the gallery' });
+        }
+    }
+
     return res.status(200).json({ url: publicUrl });
 }
