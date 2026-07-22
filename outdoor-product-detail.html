@@ -6,8 +6,9 @@
     <title>Outdoor Product | Central Home</title>
     <link rel="stylesheet" href="css/style.css">
     <style>
-        #product-specs-list li { color: #444 !important; border-bottom-color: #eee !important; }
-        #product-specs-list li strong { color: #1A1A2E !important; }
+        #product-specs-list li{color:#ddd}
+        #product-specs-list li strong{color:#fff}
+        .op-description{color:#ddd;line-height:1.7;margin:0 0 24px;white-space:pre-line}
         .op-photo{background:#f5f5f5;border-radius:8px;padding:16px;display:flex;justify-content:center}
         .op-photo img{width:100%;max-width:100%;border-radius:6px;transition:transform .15s}
         .op-photo img:hover{transform:scale(1.02)}
@@ -62,10 +63,11 @@
             <div class="op-photo" style="order:2">
                 <img src="" data-ck="product-image" alt="Product photo" onclick="openLightbox(this.src)" style="cursor:zoom-in">
             </div>
-            <div class="detail-specs" style="order:1;background:#fff;border:1px solid #eee;color:#1A1A2E">
-                <h1 data-ck="page-title" style="font-size:28px;margin-bottom:16px;color:#1A1A2E">Loading...</h1>
+            <div class="detail-specs" style="order:1">
+                <h1 data-ck="page-title" style="font-size:30px;margin-bottom:22px;color:#fff">Loading...</h1>
+                <h2 style="font-size:24px;margin-bottom:10px">Specifications</h2>
                 <ul class="specs-list" id="product-specs-list" style="margin-bottom:20px"></ul>
-                <p id="product-description" style="color:#555;line-height:1.6;margin-bottom:20px"></p>
+                <p id="product-description" class="op-description"></p>
                 <a href="outdoor.html" class="btn-primary" style="display:inline-block;margin-right:12px">Back to Outdoor Living</a>
                 <a href="#" onclick="showTabDirect('quote')" class="btn-primary">Request a Quote</a>
             </div>
