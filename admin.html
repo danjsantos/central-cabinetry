@@ -1423,7 +1423,7 @@ async function uploadOutdoorGalleryPhotos(input) {
             form.append('galleryProductId', productId);
             form.append('gallerySlug', `product-gallery-${productId}-${stamp}`);
             form.append('galleryLabel', `${productName} additional photo`);
-            form.append('gallerySortOrder', String(Date.now() + i));
+            form.append('gallerySortOrder', String(Math.floor(Date.now() / 1000) + i));
             const uploadRes = await fetch('/api/upload', { method: 'POST', body: form });
             if (!uploadRes.ok) {
                 const uploadError = await uploadRes.json().catch(() => ({}));

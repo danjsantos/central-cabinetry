@@ -137,7 +137,7 @@ export default async function handler(req, res) {
                 slug: fields.gallerySlug,
                 label: fields.galleryLabel || 'Additional product photo',
                 image_url: publicUrl,
-                sort_order: Number(fields.gallerySortOrder) || Date.now()
+                sort_order: Number(fields.gallerySortOrder) || Math.floor(Date.now() / 1000)
             })
         });
         if (!galleryRes.ok) {
