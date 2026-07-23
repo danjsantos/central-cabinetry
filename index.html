@@ -247,9 +247,22 @@
     }
 
     track.innerHTML = validImages.map(function(item) {
+        const destination = item.alt_text && (/^https?:\/\//.test(item.alt_text) || /^[\w-]+\.html(?:\?|$)/.test(item.alt_text))
+            ? item.alt_text
+            : '';
+        const label = item.label ? `<div class="showcase-label">${item.label}</div>` : '';
+        if (destination) {
+            return `
+                <a class="showcase-item" href="${destination}" aria-label="View ${item.label || 'showcase item'}">
+                    <img src="${item.image_url}" alt="${item.label || 'Product Showcase'}">
+                    ${label}
+                </a>
+            `;
+        }
         return `
             <div class="showcase-item">
-                <img src="${item.image_url}" alt="${item.alt_text || 'Showcase'}" onclick="openLightbox(this.src)">
+                <img src="${item.image_url}" alt="${item.label || 'Showcase'}" onclick="openLightbox(this.src)">
+                ${label}
             </div>
         `;
     }).join('');

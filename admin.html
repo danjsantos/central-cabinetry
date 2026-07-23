@@ -309,8 +309,8 @@
 
         <div id="tab-showcase" style="display:none">
             <div class="admin-title">Home Showcase Strip</div>
-            <div class="admin-sub">Manage the horizontal strip of product photos shown on the home page. Changes appear immediately.</div>
-            <button class="btn-save" style="max-width:220px;margin-bottom:20px" onclick="openNewShowcaseModal()">+ Add New Showcase Photo</button>
+            <div class="admin-sub">Add products from cabinets, flooring, or outdoor living. Visitors can click each item to open its product page.</div>
+            <button class="btn-save" style="max-width:220px;margin-bottom:20px" onclick="openNewShowcaseModal()">+ Add Showcase Item</button>
             <div id="loading-showcase">Loading...</div>
             <div id="showcase-grid" class="styles-grid" style="display:none"></div>
         </div>
@@ -693,8 +693,19 @@
             <div class="modal-body">
                 <input type="hidden" id="showcase-edit-id">
                 <div class="field">
+                    <label>Choose an item from the website</label>
+                    <select id="showcase-product-select" onchange="applyShowcaseProduct()">
+                        <option value="">Choose a cabinet door, flooring item, or outdoor product...</option>
+                    </select>
+                    <div style="font-size:12px;color:#888;margin-top:6px">Selecting an item fills in its name, photo, and product-page link. You can still adjust them below.</div>
+                </div>
+                <div class="field">
                     <label>Label (optional, shown on hover)</label>
                     <input type="text" id="showcase-edit-label" placeholder="e.g. Modern Kitchen">
+                </div>
+                <div class="field">
+                    <label>Product Page Link</label>
+                    <input type="text" id="showcase-edit-link" placeholder="e.g. door-style-detail.html?code=ws">
                 </div>
                 <div class="field">
                     <label>Photo</label>
@@ -2162,6 +2173,7 @@ async function uploadPhoto(input) {
 
 // HOME SHOWCASE MANAGEMENT
 let showcaseCache = {};
+let showcaseProducts = [];
 
 async function loadShowcase() {
     const loading = document.getElementById('loading-showcase');
@@ -2188,6 +2200,64 @@ async function loadShowcase() {
 
     loading.style.display = 'none';
     grid.style.display = 'grid';
+    loadShowcaseProducts();
+}
+
+async function loadShowcaseProducts() {
+    if (showcaseProducts.length) return;
+    const [doorsRes, flooringRes, outdoorRes] = await Promise.all([
+        fetch(`${SUPABASE_URL}/rest/v1/door_styles?active=eq.true&order=sort_order&select=id,code,name,banner_image,image_url`, { headers: headers(true) }),
+        fetch(`${SUPABASE_URL}/rest/v1/flooring_products?active=eq.true&order=category,sort_order&select=id,name,image_url`, { headers: headers(true) }),
+        fetch(`${SUPABASE_URL}/rest/v1/outdoor_products?active=eq.true&order=sort_order&select=id,name,image_url`, { headers: headers(true) })
+    ]);
+    const [doors, flooring, outdoor] = await Promise.all([
+        doorsRes.ok ? doorsRes.json() : [],
+        flooringRes.ok ? flooringRes.json() : [],
+        outdoorRes.ok ? outdoorRes.json() : []
+    ]);
+    showcaseProducts = [
+        ...(doors || []).map(p => ({
+            key: `door:${p.id}`,
+            group: 'Cabinet Doors',
+            label: p.name,
+            image: p.banner_image || p.image_url || '',
+            link: `door-style-detail.html?code=${String(p.code || '').toLowerCase()}`
+        })),
+        ...(flooring || []).map(p => ({
+            key: `flooring:${p.id}`,
+            group: 'Flooring',
+            label: p.name,
+            image: p.image_url || '',
+            link: `flooring-product-detail.html?id=${p.id}`
+        })),
+        ...(outdoor || []).map(p => ({
+            key: `outdoor:${p.id}`,
+            group: 'Outdoor Living',
+            label: p.name,
+            image: p.image_url || '',
+            link: `outdoor-product-detail.html?id=${p.id}`
+        }))
+    ];
+    const select = document.getElementById('showcase-product-select');
+    const groups = ['Cabinet Doors', 'Flooring', 'Outdoor Living'];
+    select.innerHTML = '<option value="">Choose a cabinet door, flooring item, or outdoor product...</option>' +
+        groups.map(group => {
+            const options = showcaseProducts
+                .filter(p => p.group === group)
+                .map(p => `<option value="${p.key}">${p.label}</option>`)
+                .join('');
+            return options ? `<optgroup label="${group}">${options}</optgroup>` : '';
+        }).join('');
+}
+
+function applyShowcaseProduct() {
+    const key = document.getElementById('showcase-product-select').value;
+    const product = showcaseProducts.find(p => p.key === key);
+    if (!product) return;
+    document.getElementById('showcase-edit-label').value = product.label;
+    document.getElementById('showcase-edit-image').value = product.image;
+    document.getElementById('showcase-edit-link').value = product.link;
+    previewShowcaseImage();
 }
 
 function openShowcaseModalById(id) {
@@ -2197,15 +2267,18 @@ function openShowcaseModalById(id) {
 }
 
 function openNewShowcaseModal() {
-    openShowcaseModal({ id: '', label: '', image_url: '', sort_order: 10 });
+    openShowcaseModal({ id: '', label: '', image_url: '', alt_text: '', sort_order: 10 });
 }
 
-function openShowcaseModal(row) {
+async function openShowcaseModal(row) {
+    await loadShowcaseProducts();
     document.getElementById('showcase-edit-id').value = row.id;
     const isNew = !row.id;
-    document.getElementById('modal-showcase-title').textContent = isNew ? 'Add Showcase Photo' : 'Edit Showcase Photo';
+    document.getElementById('modal-showcase-title').textContent = isNew ? 'Add Showcase Item' : 'Edit Showcase Item';
+    document.getElementById('showcase-product-select').value = '';
     document.getElementById('showcase-edit-label').value = row.label || '';
     document.getElementById('showcase-edit-image').value = row.image_url || '';
+    document.getElementById('showcase-edit-link').value = /^https?:\/\/|^[\w-]+\.html(?:\?|$)/.test(row.alt_text || '') ? row.alt_text : '';
     document.getElementById('showcase-edit-sort').value = row.sort_order || 10;
     document.getElementById('btn-delete-showcase').style.display = isNew ? 'none' : 'block';
     document.getElementById('showcase-save-msg').textContent = '';
@@ -2263,6 +2336,7 @@ async function saveShowcase() {
     const payload = {
         label: document.getElementById('showcase-edit-label').value,
         image_url: document.getElementById('showcase-edit-image').value,
+        alt_text: document.getElementById('showcase-edit-link').value.trim(),
         sort_order: parseInt(document.getElementById('showcase-edit-sort').value) || 10
     };
 

@@ -18,12 +18,15 @@ async function initShowcase() {
         });
         const rows = await res.json();
         if (rows.length > 0) {
-            track.innerHTML = rows.map(r => `
-                <div class="showcase-item">
-                    <img src="${r.image_url}" alt="${r.label || 'Product Showcase'}" onclick="openLightbox(this.src)">
-                    ${r.label ? `<div class="showcase-label">${r.label}</div>` : ''}
-                </div>
-            `).join('');
+            track.innerHTML = rows.map(r => {
+                const destination = r.alt_text && (/^https?:\/\//.test(r.alt_text) || /^[\w-]+\.html(?:\?|$)/.test(r.alt_text))
+                    ? r.alt_text
+                    : '';
+                const label = r.label ? `<div class="showcase-label">${r.label}</div>` : '';
+                return destination
+                    ? `<a class="showcase-item" href="${destination}" aria-label="View ${r.label || 'showcase item'}"><img src="${r.image_url}" alt="${r.label || 'Product Showcase'}">${label}</a>`
+                    : `<div class="showcase-item"><img src="${r.image_url}" alt="${r.label || 'Product Showcase'}" onclick="openLightbox(this.src)">${label}</div>`;
+            }).join('');
         }
     } catch (err) {
         console.error('Error loading showcase:', err);
