@@ -19,13 +19,18 @@ async function initShowcase() {
         const rows = await res.json();
         if (rows.length > 0) {
             track.innerHTML = rows.map(r => {
-                const destination = r.alt_text && (/^https?:\/\//.test(r.alt_text) || /^[\w-]+\.html(?:\?|$)/.test(r.alt_text))
-                    ? r.alt_text
+                const marker = '|||link:';
+                const markerIndex = (r.label || '').indexOf(marker);
+                const displayLabel = markerIndex === -1 ? (r.label || '') : r.label.slice(0, markerIndex);
+                const embeddedLink = markerIndex === -1 ? '' : r.label.slice(markerIndex + marker.length);
+                const rawDestination = embeddedLink || r.alt_text || '';
+                const destination = (/^https?:\/\//.test(rawDestination) || /^[\w-]+\.html(?:\?|$)/.test(rawDestination))
+                    ? rawDestination
                     : '';
-                const label = r.label ? `<div class="showcase-label">${r.label}</div>` : '';
+                const label = displayLabel ? `<div class="showcase-label">${displayLabel}</div>` : '';
                 return destination
-                    ? `<a class="showcase-item" href="${destination}" aria-label="View ${r.label || 'showcase item'}"><img src="${r.image_url}" alt="${r.label || 'Product Showcase'}">${label}</a>`
-                    : `<div class="showcase-item"><img src="${r.image_url}" alt="${r.label || 'Product Showcase'}" onclick="openLightbox(this.src)">${label}</div>`;
+                    ? `<a class="showcase-item" href="${destination}" aria-label="View ${displayLabel || 'showcase item'}"><img src="${r.image_url}" alt="${displayLabel || 'Product Showcase'}">${label}</a>`
+                    : `<div class="showcase-item"><img src="${r.image_url}" alt="${displayLabel || 'Product Showcase'}" onclick="openLightbox(this.src)">${label}</div>`;
             }).join('');
         }
     } catch (err) {

@@ -2174,6 +2174,22 @@ async function uploadPhoto(input) {
 // HOME SHOWCASE MANAGEMENT
 let showcaseCache = {};
 let showcaseProducts = [];
+const SHOWCASE_LINK_MARKER = '|||link:';
+
+function parseShowcaseLabel(value) {
+    const text = value || '';
+    const markerIndex = text.indexOf(SHOWCASE_LINK_MARKER);
+    return markerIndex === -1
+        ? { label: text, link: '' }
+        : {
+            label: text.slice(0, markerIndex),
+            link: text.slice(markerIndex + SHOWCASE_LINK_MARKER.length)
+        };
+}
+
+function encodeShowcaseLabel(label, link) {
+    return link ? `${label}${SHOWCASE_LINK_MARKER}${link}` : label;
+}
 
 async function loadShowcase() {
     const loading = document.getElementById('loading-showcase');
@@ -2188,15 +2204,17 @@ async function loadShowcase() {
     showcaseCache = {};
     rows.forEach(r => { showcaseCache[r.id] = r; });
 
-    grid.innerHTML = rows.map(r => `
+    grid.innerHTML = rows.map(r => {
+        const showcase = parseShowcaseLabel(r.label);
+        return `
         <div class="style-card">
             <div class="style-card-img" style="${r.image_url ? 'background-image:url(' + r.image_url + ')' : ''}"></div>
             <div class="style-card-body">
-                <div class="style-card-name">${r.label || 'No Label'}</div>
+                <div class="style-card-name">${showcase.label || 'No Label'}</div>
                 <button class="btn-edit" onclick="openShowcaseModalById('${r.id}')">Edit</button>
             </div>
         </div>
-    `).join('');
+    `; }).join('');
 
     loading.style.display = 'none';
     grid.style.display = 'grid';
@@ -2272,13 +2290,15 @@ function openNewShowcaseModal() {
 
 async function openShowcaseModal(row) {
     await loadShowcaseProducts();
+    const showcase = parseShowcaseLabel(row.label);
     document.getElementById('showcase-edit-id').value = row.id;
     const isNew = !row.id;
     document.getElementById('modal-showcase-title').textContent = isNew ? 'Add Showcase Item' : 'Edit Showcase Item';
     document.getElementById('showcase-product-select').value = '';
-    document.getElementById('showcase-edit-label').value = row.label || '';
+    document.getElementById('showcase-edit-label').value = showcase.label;
     document.getElementById('showcase-edit-image').value = row.image_url || '';
-    document.getElementById('showcase-edit-link').value = /^https?:\/\/|^[\w-]+\.html(?:\?|$)/.test(row.alt_text || '') ? row.alt_text : '';
+    document.getElementById('showcase-edit-link').value = showcase.link ||
+        (/^https?:\/\/|^[\w-]+\.html(?:\?|$)/.test(row.alt_text || '') ? row.alt_text : '');
     document.getElementById('showcase-edit-sort').value = row.sort_order || 10;
     document.getElementById('btn-delete-showcase').style.display = isNew ? 'none' : 'block';
     document.getElementById('showcase-save-msg').textContent = '';
@@ -2333,10 +2353,11 @@ async function saveShowcase() {
     btn.disabled = true;
     btn.textContent = 'Saving...';
 
+    const displayLabel = document.getElementById('showcase-edit-label').value;
+    const productLink = document.getElementById('showcase-edit-link').value.trim();
     const payload = {
-        label: document.getElementById('showcase-edit-label').value,
+        label: encodeShowcaseLabel(displayLabel, productLink),
         image_url: document.getElementById('showcase-edit-image').value,
-        alt_text: document.getElementById('showcase-edit-link').value.trim(),
         sort_order: parseInt(document.getElementById('showcase-edit-sort').value) || 10
     };
 
@@ -2353,7 +2374,8 @@ async function saveShowcase() {
         await loadShowcase();
         setTimeout(closeShowcaseModal, 1000);
     } else {
-        msg.textContent = '❌ Error saving.';
+        const error = await res.json().catch(() => ({}));
+        msg.textContent = '❌ Error saving: ' + (error.message || `HTTP ${res.status}`);
         msg.className = 'save-msg error';
     }
     btn.disabled = false;
