@@ -1070,6 +1070,7 @@ let flooringProductsLoaded = false;
 let flooringProductsCache = {};
 let outdoorProductsLoaded = false;
 let outdoorProductsCache = {};
+let outdoorProductsList = [];
 let galleryPhotosLoaded = false;
 let galleryPhotosCache = {};
 
@@ -1358,18 +1359,23 @@ async function loadOutdoorProducts() {
     const kitchenLoading = document.getElementById('loading-kitchen-products');
     const furnitureLoading = document.getElementById('loading-outdoor-products');
 
+    outdoorProductsList = Array.isArray(rows) ? rows : [];
     outdoorProductsCache = {};
-    (rows || []).forEach(r => { outdoorProductsCache[r.id] = r; });
+    outdoorProductsList.forEach(r => { outdoorProductsCache[r.id] = r; });
 
     function productCards(products) {
         if (!products.length) return '<p style="color:#888">No products added yet.</p>';
-        return products.map(r => `
+        return products.map((r, index) => `
         <div class="style-card">
             <div class="style-card-img" style="${r.image_url ? 'background-image:url(' + r.image_url + ')' : ''}">
                 <span class="style-card-badge ${r.active ? 'badge-active' : 'badge-hidden'}">${r.active ? 'Active' : 'Hidden'}</span>
             </div>
             <div class="style-card-body">
                 <div class="style-card-name">${r.name}</div>
+                <div class="style-order-controls">
+                    <button class="btn-order" onclick="moveOutdoorProduct('${r.id}', -1)" ${index === 0 ? 'disabled' : ''}>← Earlier</button>
+                    <button class="btn-order" onclick="moveOutdoorProduct('${r.id}', 1)" ${index === products.length - 1 ? 'disabled' : ''}>Later →</button>
+                </div>
                 <button class="btn-edit" onclick="openOutdoorProductModalById('${r.id}')">Edit</button>
             </div>
         </div>
@@ -1387,6 +1393,47 @@ async function loadOutdoorProducts() {
     furnitureGrid.style.display = 'grid';
     outdoorProductsLoaded = true;
 }
+
+async function moveOutdoorProduct(id, direction) {
+    const current = outdoorProductsCache[id];
+    if (!current) return;
+
+    const categoryProducts = outdoorProductsList.filter(product =>
+        current.category === 'Outdoor Kitchen'
+            ? product.category === 'Outdoor Kitchen'
+            : product.category !== 'Outdoor Kitchen'
+    );
+    const currentIndex = categoryProducts.findIndex(product => product.id === id);
+    const targetIndex = currentIndex + direction;
+    if (currentIndex < 0 || targetIndex < 0 || targetIndex >= categoryProducts.length) return;
+
+    const reordered = categoryProducts.slice();
+    [reordered[currentIndex], reordered[targetIndex]] = [reordered[targetIndex], reordered[currentIndex]];
+
+    const kitchenSection = current.category === 'Outdoor Kitchen';
+    const grid = document.getElementById(kitchenSection ? 'kitchen-products-grid' : 'outdoor-products-grid');
+    grid.style.pointerEvents = 'none';
+    grid.style.opacity = '.6';
+
+    const responses = await Promise.all(reordered.map((product, index) =>
+        fetch(`${SUPABASE_URL}/rest/v1/outdoor_products?id=eq.${product.id}`, {
+            method: 'PATCH',
+            headers: { ...headers(true), 'Prefer': 'return=minimal' },
+            body: JSON.stringify({ sort_order: index + 1 })
+        })
+    ));
+
+    grid.style.pointerEvents = '';
+    grid.style.opacity = '';
+
+    if (responses.some(response => !response.ok)) {
+        alert('The new product order could not be saved. Please try again.');
+        return;
+    }
+
+    await loadOutdoorProducts();
+}
+
 function openNewOutdoorProductModal(category) {
     openOutdoorProductModal({ id: '', name: '', category: category || 'Outdoor Furniture', description: '', image_url: '', active: true });
 }
